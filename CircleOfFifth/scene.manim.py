@@ -133,9 +133,63 @@ def _createKeyNameText (
 class TestScene ( Scene ):
     def construct ( self ):
         mob_line = Line ( LEFT * config.frame_x_radius, RIGHT * config.frame_x_radius )
-        mob_text = MusicGlyph ( "\ue260" ).toPosition ( (2, 1, 0) )
-        print ( mob_text.get_center ( ) )
+        mob_text = MusicGlyph ( "\ue260" ).toPosition ( ( 2, 1, 0 ) )
+        print ( mob_text.get_center ( ) ) 
         self.add ( mob_text, mob_line )
+
+class IntroScene ( Scene ):
+    def construct ( self ):
+        mob_textProvide = Text ( "提    供", **newTextConfig ( fs = 2, font = "FandolHei" ) )\
+            .to_edge ( UP, buff = 0.75 )
+            
+        mob_manshiLogo = Tex ( "M", "athematic", "S", **newLatexConfig ( fs = 4 ) )\
+            .next_to ( mob_textProvide, DOWN, buff = 1.25 )
+        mob_manshiLogo [ 0 ].set_color ( BLUE_B )
+        mob_manshiLogo [ -1 ].set_color ( MAROON_A )
+        mob_fxpLogo = MathTex ( r"\mathbb{F}[x]_p", **newLatexConfig ( fs = 3 ) )\
+            .next_to ( mob_manshiLogo, DOWN, buff = 1.25 )
+            
+        mob_manshiText = Text ( "漫士沉思录", color= YELLOW, **newTextConfig ( fs = 2.5 ) )
+        mob_fxpText = Text ( "F.X.P. Presents", **newTextConfig ( fs = 2.5 ) )
+
+        self.add ( mob_textProvide )
+        self.play (
+            DrawBorderThenFill ( mob_manshiLogo, run_time = 1 ),
+        )
+        
+        manshiLogoCenter = mob_manshiLogo.get_center ( )
+        letterMDisplace = np.array (( 0, 0.125, 0 ))
+        letterSDisplace = np.array (( 0.4, -0.125, 0 ))
+        
+        self.play (
+            FadeOut ( mob_manshiLogo [ 1 ] ),
+            mob_manshiLogo [ 0 ].animate\
+                .move_to ( letterMDisplace + manshiLogoCenter ),
+            mob_manshiLogo [ -1 ].animate\
+                .move_to ( letterSDisplace + manshiLogoCenter ),
+            run_time = 0.5,
+        )
+        mob_manshiLogo.remove ( mob_manshiLogo [ 1 ] )
+        manshiLogoCenter = mob_manshiLogo.get_center ( )
+        
+        VGroup ( mob_manshiLogo, mob_manshiText, mob_fxpLogo, mob_fxpText )\
+            .arrange_in_grid ( cols = 2, buff = ( 1, 1 ) )\
+            .move_to ( DOWN * 0.5 )
+        manshiLogoTargetPoint = mob_manshiLogo.get_center ( )
+        
+        mob_manshiLogo.move_to ( manshiLogoCenter )
+        self.play (
+            mob_manshiLogo.animate\
+                .move_to ( manshiLogoTargetPoint ),
+            FadeIn ( 
+                mob_manshiText, 
+                mob_fxpLogo, 
+                mob_fxpText, 
+            ),
+            run_time = 0.5,
+        )
+        
+        self.wait ( 2 )
 
 class MajorScaleScene ( Scene ):
     def construct ( self ):
