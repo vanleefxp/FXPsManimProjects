@@ -1,0 +1,917 @@
+[
+    {
+        "content": "この動画は、マー・エクスポ数学科学普及大会に参加する。",
+        "startTime": 0,
+        "endTime": 5402
+    },
+    {
+        "content": "大家好，我是 F.X.P., 一个热爱音乐的落魄数学生。",
+        "startTime": 17218,
+        "endTime": null
+    },
+    {
+        "content": "这次我要说的话题是一个与数学、物理和音乐都有关系的话题",
+        "startTime": 20914,
+        "endTime": null
+    },
+    {
+        "content": "我将会从驻波的原理开始讲起，一步步触及到音乐的底层逻辑。",
+        "startTime": 25140,
+        "endTime": null
+    },
+    {
+        "content": "相信屏幕前的大家早在初中刚开始接触物理的时候",
+        "startTime": 29260,
+        "endTime": null
+    },
+    {
+        "content": "就已经了解，声音是由振动产生的",
+        "startTime": 32442,
+        "endTime": null
+    },
+    {
+        "content": "也学过乐音的三要素：音高，音量和音色",
+        "startTime": 35252,
+        "endTime": null
+    },
+    {
+        "content": "知道音高和音量分别是由振动的频率和振幅所决定的。",
+        "startTime": 38528,
+        "endTime": null
+    },
+    {
+        "content": "不过对于音色由什么决定，一般在这时候是不作提及的",
+        "startTime": 42222,
+        "endTime": null
+    },
+    {
+        "content": "因为这个问题背后的原理有些复杂。",
+        "startTime": 46006,
+        "endTime": null
+    },
+    {
+        "content": "其实我们说音高由频率决定，这里所说的“频率”",
+        "startTime": 48392,
+        "endTime": null
+    },
+    {
+        "content": "其实可能根本就不是“一个”频率，而是“一组”",
+        "startTime": 51760,
+        "endTime": null
+    },
+    {
+        "content": "这“一组”频率的复合方式，就是音色的决定因素。",
+        "startTime": 54351,
+        "endTime": 58707
+    },
+    {
+        "content": "要想具体解释这个原理，我们得从驻波开始说起。",
+        "startTime": 60241,
+        "endTime": null
+    },
+    {
+        "content": "相信很多学物理的小伙伴们可能对此已经有所了解了",
+        "startTime": 63189,
+        "endTime": null
+    },
+    {
+        "content": "不过我还是想简单说一下。",
+        "startTime": 66326,
+        "endTime": null
+    },
+    {
+        "content": "所谓“驻”，就是“静止不动”的意思，对应着一种固定的振动模式。",
+        "startTime": 68298,
+        "endTime": null
+    },
+    {
+        "content": "假设我们有一段足够长的绳索，其上产生了两列相向而行的简谐波",
+        "startTime": 71850,
+        "endTime": null
+    },
+    {
+        "content": "频率、振幅都相等",
+        "startTime": 76250,
+        "endTime": null
+    },
+    {
+        "content": "为了方便接下来的讨论",
+        "startTime": 77746,
+        "endTime": null
+    },
+    {
+        "content": "我们假设第一列波在原点处的初相是 $\\pi / 2$, 向右行进",
+        "startTime": 79197,
+        "endTime": null
+    },
+    {
+        "content": "第二列波在原点的初相是 $-\\pi / 2$, 向左行进。",
+        "startTime": 83319,
+        "endTime": null
+    },
+    {
+        "content": "由于两列波频率振幅都相等，它们可以发生干涉",
+        "startTime": 86837,
+        "endTime": null
+    },
+    {
+        "content": "形成稳定的干涉图案",
+        "startTime": 90025,
+        "endTime": null
+    },
+    {
+        "content": "即绳上每一质点都按照固定的模式振动，不随时间变化。",
+        "startTime": 91573,
+        "endTime": null
+    },
+    {
+        "content": "我们可以很容易地写出这两列波的表达式",
+        "startTime": 95314,
+        "endTime": null
+    },
+    {
+        "content": "并将它们相加得到合振动的表达式。",
+        "startTime": 97602,
+        "endTime": null
+    },
+    {
+        "content": "利用三角函数的和差化积公式",
+        "startTime": 99991,
+        "endTime": null
+    },
+    {
+        "content": "再结合波速 $v$、频率 $f$ 与波长 $\\lambda$ 的关系",
+        "startTime": 101959,
+        "endTime": null
+    },
+    {
+        "content": "可以将合振动的表达式写成分别只与位置 $x$ 和时间 $t$ 相关的两正弦项的乘积",
+        "startTime": 105102,
+        "endTime": null
+    },
+    {
+        "content": "前面系数是原始振幅 $A$ 的两倍。",
+        "startTime": 110346,
+        "endTime": null
+    },
+    {
+        "content": "通过动画我们也能很直观地理解这个表达式的含义",
+        "startTime": 113062,
+        "endTime": null
+    },
+    {
+        "content": "合振动的图像，看上去就像是一个正弦曲线在不断地上下缩放",
+        "startTime": 115524,
+        "endTime": null
+    },
+    {
+        "content": "而这个“缩放”的过程也是一个关于时间的正弦函数。",
+        "startTime": 120114,
+        "endTime": null
+    },
+    {
+        "content": "我们管整条弦上振幅最大的质点叫作“波腹”",
+        "startTime": 123067,
+        "endTime": null
+    },
+    {
+        "content": "振幅为 0 的质点叫作“波节”。",
+        "startTime": 125880,
+        "endTime": null
+    },
+    {
+        "content": "在刚才的假设条件下，原点 $x = 0$ 会成为一个波节",
+        "startTime": 127847,
+        "endTime": null
+    },
+    {
+        "content": "且 $t$ 等于0时所有质点都处于平衡位置。",
+        "startTime": 131588,
+        "endTime": null
+    },
+    {
+        "content": "我们还可以看到，波腹的振幅为 $2A$,",
+        "startTime": 134498,
+        "endTime": null
+    },
+    {
+        "content": "相邻波节与波腹之间的距离是四分之 $\\lambda$.",
+        "startTime": 136979,
+        "endTime": 140796
+    },
+    {
+        "content": "接下来我们来看有两个固定端的有限长度单弦上的驻波。",
+        "startTime": 143068,
+        "endTime": null
+    },
+    {
+        "content": "单弦驻波是由入射波和经由单弦固定端的反射波叠加形成的",
+        "startTime": 146627,
+        "endTime": null
+    },
+    {
+        "content": "由于在固定端反射的时候，波会发生 $\\pi$ 相位的突变，称为半波损失",
+        "startTime": 150480,
+        "endTime": null
+    },
+    {
+        "content": "这使得形成驻波时固定端的振幅始终为0, 成为波节。",
+        "startTime": 155397,
+        "endTime": 159488
+    },
+    {
+        "content": "对于有两个固定端的单弦来说，两端都应该是波节",
+        "startTime": 162533,
+        "endTime": null
+    },
+    {
+        "content": "这就给单弦驻波可能的波长和频率增加了一些限制。",
+        "startTime": 165713,
+        "endTime": null
+    },
+    {
+        "content": "为了方便讨论我们做一些归一化处理",
+        "startTime": 168665,
+        "endTime": null
+    },
+    {
+        "content": "假定单弦长度为1, 左端右端分别记为 $x = 0$ 和 $x = 1$",
+        "startTime": 171147,
+        "endTime": null
+    },
+    {
+        "content": "入射波和反射波的振幅均为 1/2, 这样驻波波腹的振幅就刚好是 1",
+        "startTime": 175451,
+        "endTime": null
+    },
+    {
+        "content": "刚才得出的驻波表达式已经保证了 $x = 0$ 的点是波节",
+        "startTime": 180181,
+        "endTime": null
+    },
+    {
+        "content": "为了确保 $x = 1$ 也是波节",
+        "startTime": 183646,
+        "endTime": null
+    },
+    {
+        "content": "我们只需要将 $x = 1$ 代入，让 $y(1, t)$ 恒等于 0",
+        "startTime": 185848,
+        "endTime": null
+    },
+    {
+        "content": "这样下来我们发现，要实现这一点",
+        "startTime": 189494,
+        "endTime": null
+    },
+    {
+        "content": "需要使得 $2 / \\lambda$ 的值是某个正整数 $k$",
+        "startTime": 191875,
+        "endTime": null
+    },
+    {
+        "content": "$k$ 值表示当前单弦上容纳的半波长个数，我们将其称为波段数。",
+        "startTime": 194877,
+        "endTime": null
+    },
+    {
+        "content": "接下来我们再去看频率：假设波段数为 1 的驻波频率",
+        "startTime": 205424,
+        "endTime": null
+    },
+    {
+        "content": "——称为基频或一次谐频——为 1",
+        "startTime": 208749,
+        "endTime": null
+    },
+    {
+        "content": "则波速等于波长与频率的乘积，是一个定值 2",
+        "startTime": 211553,
+        "endTime": null
+    },
+    {
+        "content": "也就是说波段数 $k$ 为的驻波频率",
+        "startTime": 214689,
+        "endTime": null
+    },
+    {
+        "content": "——称为 $k$ 次谐频或第 $(k - 1)$ 泛音——刚好也是 $k$",
+        "startTime": 217117,
+        "endTime": null
+    },
+    {
+        "content": "都是基频的整数倍",
+        "startTime": 220583,
+        "endTime": null
+    },
+    {
+        "content": "波段数越多，振得就越快。",
+        "startTime": 222031,
+        "endTime": null
+    },
+    {
+        "content": "这些振动模式称为单弦振动的简正模式。",
+        "startTime": 223954,
+        "endTime": null
+    },
+    {
+        "content": "于是我们就可以把驻波的表达式稍微改写一下",
+        "startTime": 226992,
+        "endTime": null
+    },
+    {
+        "content": "得到一个很漂亮的形式 $y_k (x, t) = \\sin (\\pi kx) \\sin (2\\pi kt)$。",
+        "startTime": 229852,
+        "endTime": null
+    },
+    {
+        "content": "下面这段动画演示了 $k$ 从 1 到 6 时单弦的振动状态。",
+        "startTime": 234909,
+        "endTime": null
+    },
+    {
+        "content": "在音乐当中，我们会把基频的正整数倍这一组频率称之为泛音列。",
+        "startTime": 243904,
+        "endTime": null
+    },
+    {
+        "content": "说到泛音列，学习过音乐的小伙伴可能看过下面这张图",
+        "startTime": 248259,
+        "endTime": null
+    },
+    {
+        "content": "这张图所展示的是以钢琴上最低 C 音频率",
+        "startTime": 251908,
+        "endTime": null
+    },
+    {
+        "content": "——大约是 32.70 Hz——为基频的振动所产生的泛音列",
+        "startTime": 254480,
+        "endTime": null
+    },
+    {
+        "content": "其各个泛音在十二平均律下所对应的近似音高。",
+        "startTime": 258359,
+        "endTime": null
+    },
+    {
+        "content": "图上方的数字标注的是以音分为单位的误差。",
+        "startTime": 261631,
+        "endTime": null
+    },
+    {
+        "content": "单弦实际的振动状态往往并不是只有一种简正模式",
+        "startTime": 266165,
+        "endTime": null
+    },
+    {
+        "content": "而是所有简正模式在不同振幅与相位下的叠加",
+        "startTime": 269253,
+        "endTime": null
+    },
+    {
+        "content": "通过叠加，我们可以得到更复杂的振动模式。",
+        "startTime": 272428,
+        "endTime": null
+    },
+    {
+        "content": "下面这个例子中展示了一个叠加振动和其前四个简正模式的示意图。",
+        "startTime": 275050,
+        "endTime": null
+    },
+    {
+        "content": "将振动表达式中关于 $x$ 的正弦项删去，仅保留关于时间 $t$ 的项",
+        "startTime": 290782,
+        "endTime": null
+    },
+    {
+        "content": "我们可以近似刻画单弦上质点的总体振动状态。",
+        "startTime": 295267,
+        "endTime": null
+    },
+    {
+        "content": "记这个新的表达式为 $h(t)$",
+        "startTime": 298029,
+        "endTime": null
+    },
+    {
+        "content": "与前面展示的振动模式图不同",
+        "startTime": 299952,
+        "endTime": null
+    },
+    {
+        "content": "它是质点竖直位置关于时间 $t$ 的函数，称为波形图。",
+        "startTime": 301734,
+        "endTime": null
+    },
+    {
+        "content": "如果你有在物理实验中接触过示波器",
+        "startTime": 305618,
+        "endTime": null
+    },
+    {
+        "content": "事实上示波器屏幕上所展示的图像就是波形图",
+        "startTime": 307862,
+        "endTime": null
+    },
+    {
+        "content": "而如果你有使用过一些音频处理软件",
+        "startTime": 311376,
+        "endTime": null
+    },
+    {
+        "content": "只要在软件中把时间轴拉得足够长",
+        "startTime": 313483,
+        "endTime": null
+    },
+    {
+        "content": "就能清楚地看到音频对应的波形曲线。",
+        "startTime": 315822,
+        "endTime": null
+    },
+    {
+        "content": "从表达式可以看出，具有周期性的振动",
+        "startTime": 321444,
+        "endTime": null
+    },
+    {
+        "content": "其波形图可以表示成频率是基频正整数倍的",
+        "startTime": 323972,
+        "endTime": null
+    },
+    {
+        "content": "一系列振幅相位各异的正弦曲线之和。",
+        "startTime": 327013,
+        "endTime": 346753
+    },
+    {
+        "content": "像是这样的表达式叫作傅里叶级数",
+        "startTime": 356940,
+        "endTime": null
+    },
+    {
+        "content": "虽然我在这里展示的式子并非傅里叶级数最常见的形式",
+        "startTime": 360076,
+        "endTime": null
+    },
+    {
+        "content": "但是通过将 $h(t)$ 的表达式乘虚数单位 $\\text{i}$ 再补上相应的余弦项",
+        "startTime": 363627,
+        "endTime": null
+    },
+    {
+        "content": "可以将其配凑成工程学中更常用的复数形式",
+        "startTime": 368073,
+        "endTime": null
+    },
+    {
+        "content": "这个复数形式的表达式可以看作是形如 $\\text{e}^(2\\pi \\text{i} kt)$ 的一组基函数在复系数下的线性组合",
+        "startTime": 370840,
+        "endTime": null
+    },
+    {
+        "content": "系数的模长和辐角分别代表 $k$ 次谐频的振幅和相位。",
+        "startTime": 377119,
+        "endTime": null
+    },
+    {
+        "content": "这一组系数合起来就构成了该波形的频谱。",
+        "startTime": 380581,
+        "endTime": null
+    },
+    {
+        "content": "在信号处理中有“时域”和“频域”的概念",
+        "startTime": 386051,
+        "endTime": null
+    },
+    {
+        "content": "我们说波形图是周期振动在时域下的表现",
+        "startTime": 388435,
+        "endTime": null
+    },
+    {
+        "content": "而频谱是其在频域下的表现。",
+        "startTime": 391706,
+        "endTime": null
+    },
+    {
+        "content": "像画面右侧这样，将各谐频的振幅和相位关系绘制成柱状图",
+        "startTime": 393904,
+        "endTime": null
+    },
+    {
+        "content": "就是频谱图。",
+        "startTime": 398022,
+        "endTime": null
+    },
+    {
+        "content": "不论是形状多么奇特的波形，只要是周期函数",
+        "startTime": 399019,
+        "endTime": null
+    },
+    {
+        "content": "在频谱上都会表现为离散的柱形序列。",
+        "startTime": 402061,
+        "endTime": null
+    },
+    {
+        "content": "将波形看做是声音信号的话",
+        "startTime": 404499,
+        "endTime": null
+    },
+    {
+        "content": "那么决定波形音色的关键因素正是这一组序列。",
+        "startTime": 406698,
+        "endTime": null
+    },
+    {
+        "content": "一般来说，同一种乐器演奏不同音高的声音",
+        "startTime": 409649,
+        "endTime": null
+    },
+    {
+        "content": "其频谱除了基频不同之外",
+        "startTime": 412513,
+        "endTime": null
+    },
+    {
+        "content": "各谐波之间的振幅和相位关系通常是相对固定的。",
+        "startTime": 414340,
+        "endTime": null
+    },
+    {
+        "content": "要验证这件事情，我们可以做一个简单的实验",
+        "startTime": 418607,
+        "endTime": null
+    },
+    {
+        "content": "找到一些乐器演奏单音的声音样本，对其执行傅里叶变换",
+        "startTime": 421318,
+        "endTime": null
+    },
+    {
+        "content": "从中提取出基频和谐频的振幅相位关系",
+        "startTime": 425067,
+        "endTime": null
+    },
+    {
+        "content": "然后再根据分析结果自己逆向合成一个声波，保存成音频文件",
+        "startTime": 427733,
+        "endTime": null
+    },
+    {
+        "content": "对比合成的音频与原始音频的音响效果。",
+        "startTime": 431765,
+        "endTime": null
+    },
+    {
+        "content": "下面我们来欣赏一组乐器样本和常见基本波形的波形图、振动模式图及频谱。",
+        "startTime": 434387,
+        "endTime": 440389
+    },
+    {
+        "content": "所以为什么至此我要花费那么大的精力去讨论单弦驻波呢？",
+        "startTime": 583079,
+        "endTime": null
+    },
+    {
+        "content": "这是因为单弦振动这个模型在乐器的发声原理中实在是太普遍了",
+        "startTime": 587240,
+        "endTime": null
+    },
+    {
+        "content": "——弦乐器不管是像小提琴这样拉弦的也好",
+        "startTime": 591449,
+        "endTime": null
+    },
+    {
+        "content": "还是像吉他、竖琴那样拨弦的，自不用说",
+        "startTime": 593988,
+        "endTime": null
+    },
+    {
+        "content": "甚至像钢琴这样的键盘乐器，也是靠单弦振动发声的。",
+        "startTime": 597587,
+        "endTime": null
+    },
+    {
+        "content": "下面这张图展示了钢琴打击系统的结构",
+        "startTime": 601191,
+        "endTime": null
+    },
+    {
+        "content": "虽然图上的元素有些复杂，但是这里面最关键的部件只有四个",
+        "startTime": 603865,
+        "endTime": null
+    },
+    {
+        "content": "琴键、琴槌、琴弦和制音器。",
+        "startTime": 608266,
+        "endTime": null
+    },
+    {
+        "content": "我做了一个简化版本的图和动画演示",
+        "startTime": 611223,
+        "endTime": null
+    },
+    {
+        "content": "琴键通过杠杆和连杆结构与琴槌、制音器相连",
+        "startTime": 615441,
+        "endTime": null
+    },
+    {
+        "content": "演奏者按下琴键的时候，制音器抬起，琴槌击弦一下并自动下落。",
+        "startTime": 619020,
+        "endTime": null
+    },
+    {
+        "content": "管乐器虽然不是靠单弦振动发声，而是靠空气柱在管腔内的振动",
+        "startTime": 631617,
+        "endTime": null
+    },
+    {
+        "content": "这里面涉及到的波是个纵波，传播介质是空气",
+        "startTime": 636158,
+        "endTime": null
+    },
+    {
+        "content": "但是对于两端开放的管腔中形成的驻波，其规律和单弦驻波是一致的",
+        "startTime": 639577,
+        "endTime": null
+    },
+    {
+        "content": "也有基频和频率为其正整数倍的谐频。",
+        "startTime": 644163,
+        "endTime": null
+    },
+    {
+        "content": "下面我们来看一个通过控制弦振动的方式来影响音色的例子",
+        "startTime": 651184,
+        "endTime": null
+    },
+    {
+        "content": "弦乐器的“泛音”演奏技法。",
+        "startTime": 654695,
+        "endTime": null
+    },
+    {
+        "content": "注意这里“泛音”指的是一种演奏技法",
+        "startTime": 656288,
+        "endTime": null
+    },
+    {
+        "content": "而不是前面提到的频率概念。",
+        "startTime": 658863,
+        "endTime": null
+    },
+    {
+        "content": "回到一开始的单弦振动模型",
+        "startTime": 660645,
+        "endTime": null
+    },
+    {
+        "content": "假设我们在弦上某固定点 $x_0$ 处套上一个小环",
+        "startTime": 662423,
+        "endTime": null
+    },
+    {
+        "content": "这样就抑制了该点处的振动，但并未改变产生驻波的有效弦长",
+        "startTime": 665981,
+        "endTime": null
+    },
+    {
+        "content": "也就是说基频不变。",
+        "startTime": 669845,
+        "endTime": null
+    },
+    {
+        "content": "这样的操作会使得不以该点为波节的驻波无法生成",
+        "startTime": 671388,
+        "endTime": null
+    },
+    {
+        "content": "而以该点为波节的驻波是不受影响的。",
+        "startTime": 674337,
+        "endTime": null
+    },
+    {
+        "content": "由于每一种简正模式下，波节一定出现在弦的整数等分点上",
+        "startTime": 680409,
+        "endTime": null
+    },
+    {
+        "content": "因此所有不同波段数的驻波，其波节构成 $[0, 1]$ 区间上的有理数集合",
+        "startTime": 684527,
+        "endTime": null
+    },
+    {
+        "content": "所以如果 $x_0$ 是有理数且等于 $n / m$",
+        "startTime": 689074,
+        "endTime": null
+    },
+    {
+        "content": "——这里 $m$, $n$ 是互素的正整数",
+        "startTime": 692349,
+        "endTime": null
+    },
+    {
+        "content": "那么单弦将会失去所有波段数不是 $m$ 倍数的驻波",
+        "startTime": 694361,
+        "endTime": null
+    },
+    {
+        "content": "得到一个基频为 $m$ 而不是 1 的新泛音列。",
+        "startTime": 697636,
+        "endTime": null
+    },
+    {
+        "content": "以下是单弦在无限制和有限制的情形下振动状态的对比图。",
+        "startTime": 703151,
+        "endTime": null
+    },
+    {
+        "content": "我这里把小环放在了弦的中点处。",
+        "startTime": 706610,
+        "endTime": null
+    },
+    {
+        "content": "在无限制的状态下，我们可以看到，弦中点能够自由上下移动。",
+        "startTime": 708768,
+        "endTime": null
+    },
+    {
+        "content": "而在有限制的状态下，弦中点保持不动，单弦左右两半的形状关于弦中点呈中心对称。",
+        "startTime": 716999,
+        "endTime": null
+    },
+    {
+        "content": "这就相当于相当于从频谱中提取所有下标为 $m$ 的正整数倍的系数",
+        "startTime": 727188,
+        "endTime": null
+    },
+    {
+        "content": "构成一个新的频谱，从而产生了一个与原始音色不同的新音色。",
+        "startTime": 731077,
+        "endTime": null
+    },
+    {
+        "content": "弦乐器的“泛音”技巧是通过虚按弦的同时拉奏或拨奏实现的。",
+        "startTime": 737862,
+        "endTime": null
+    },
+    {
+        "content": "这里“虚按弦”的动作就相当于模型当中的“小环”，将按点固定为波节。",
+        "startTime": 741653,
+        "endTime": null
+    },
+    {
+        "content": "与实按弦不同的是，实按弦直接改变了振动的有效弦长，而虚按弦没有。",
+        "startTime": 746169,
+        "endTime": null
+    },
+    {
+        "content": "在实际演奏中，考虑到演奏的方便性",
+        "startTime": 751087,
+        "endTime": null
+    },
+    {
+        "content": "按点的位置一般会取分母不超过 6 的等分点。",
+        "startTime": 753553,
+        "endTime": null
+    },
+    {
+        "content": "本期视频的主要内容到此就已经结束了。",
+        "startTime": 758285,
+        "endTime": null
+    },
+    {
+        "content": "在结束视频之前，我还想稍微说几句题外话。",
+        "startTime": 760477,
+        "endTime": null
+    },
+    {
+        "content": "作为一名学数学的大学生，同时也是一位音乐爱好者",
+        "startTime": 763431,
+        "endTime": null
+    },
+    {
+        "content": "之所以我选择学习数学，而没有走专业的音乐路线",
+        "startTime": 767261,
+        "endTime": null
+    },
+    {
+        "content": "其实是因为我发觉自己对音乐的热爱这个过程其实有些慢热",
+        "startTime": 770639,
+        "endTime": null
+    },
+    {
+        "content": "这使得我未能够像很多打算走音乐专业路线的同学一样自小就开始练习乐器",
+        "startTime": 774705,
+        "endTime": null
+    },
+    {
+        "content": "所以至今为止我也无法以专业的水平演奏任何一样乐器。",
+        "startTime": 779151,
+        "endTime": null
+    },
+    {
+        "content": "这样的路线也许有些曲折，但我并不后悔学习数学的选择。",
+        "startTime": 782715,
+        "endTime": null
+    },
+    {
+        "content": "因为，就如你在这部视频中所看到的",
+        "startTime": 786562,
+        "endTime": null
+    },
+    {
+        "content": "数学让我对音乐中很多概念和原理有了更为深入的认识。",
+        "startTime": 788898,
+        "endTime": null
+    },
+    {
+        "content": "有人说音乐是最接近于理科的艺术形式",
+        "startTime": 793109,
+        "endTime": null
+    },
+    {
+        "content": "想象在你听到的每一个音符背后",
+        "startTime": 795779,
+        "endTime": null
+    },
+    {
+        "content": "也许都是一根振动的单弦或者容纳空气振动的空心管腔",
+        "startTime": 798124,
+        "endTime": null
+    },
+    {
+        "content": "上上下下或来来往往的驻波，层层叠叠的正弦函数组合而成的波形",
+        "startTime": 802240,
+        "endTime": null
+    },
+    {
+        "content": "也有学者说音乐是“最高级的艺术形式”",
+        "startTime": 807254,
+        "endTime": null
+    },
+    {
+        "content": "虽说我并不赞同对艺术进行高低贵贱的划分",
+        "startTime": 810153,
+        "endTime": null
+    },
+    {
+        "content": "也认为应该平等承认不同艺术形式的价值",
+        "startTime": 813009,
+        "endTime": null
+    },
+    {
+        "content": "但这种说法所基于的理由正是说“音乐是一种没有意味的纯形式”。",
+        "startTime": 815584,
+        "endTime": null
+    },
+    {
+        "content": "一般的语言或者图像艺术或多或少",
+        "startTime": 820046,
+        "endTime": null
+    },
+    {
+        "content": "都要借助某种“符号-意义”映射体系才能被人们所理解",
+        "startTime": 821967,
+        "endTime": null
+    },
+    {
+        "content": "但音乐就是“符号”本身，理解音乐是不受意义体系的限制的",
+        "startTime": 825149,
+        "endTime": null
+    },
+    {
+        "content": "音乐是一种 universal language",
+        "startTime": 828987,
+        "endTime": null
+    },
+    {
+        "content": "其底层逻辑在数学。",
+        "startTime": 831471,
+        "endTime": null
+    },
+    {
+        "content": "你能说单弦的振动一定是为了表达什么意义吗？",
+        "startTime": 833022,
+        "endTime": null
+    },
+    {
+        "content": "它只是恰好符合了某种物理规律和数学原理而已。",
+        "startTime": 835427,
+        "endTime": null
+    },
+    {
+        "content": "再一次，我是 F.X.P., 一个热爱音乐的落魄数学生",
+        "startTime": 839026,
+        "endTime": null
+    },
+    {
+        "content": "感谢大家愿意观看本期视频。",
+        "startTime": 842586,
+        "endTime": 846167
+    }
+]
