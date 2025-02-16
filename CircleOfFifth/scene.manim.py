@@ -33,7 +33,7 @@ tipConfig = pyr.m (
 )
 
 _noteNames = np.array (( "C", "D", "E", "F", "G", "A", "B" ))
-_majorScale = np.array ( ( 0, 2, 4, 5, 7, 9, 11 ) )
+_majorScale = np.sort ( np.arange ( -1, 6 ) * 7 % 12 )
 _co5DegreeOrder = ( np.arange ( -1, 6 ) * 4 ) % 7
 _co5DegreeArgs = np.argsort ( _co5DegreeOrder )
 _noteNamesCo5Order = _noteNames [ _co5DegreeOrder ]
@@ -130,6 +130,9 @@ def _createKeyNameText (
     )
     return mob_text
 
+def pitch2Freq ( pitch: float, a4Freq: float = 440 ) -> float:
+    return a4Freq * 2 ** ( ( pitch - 69 ) / 12 )
+
 class TestScene ( Scene ):
     def construct ( self ):
         mob_line = Line ( LEFT * config.frame_x_radius, RIGHT * config.frame_x_radius )
@@ -191,6 +194,187 @@ class IntroScene ( Scene ):
         
         self.wait ( 2 )
 
+class FrequencyRatioScene ( Scene ):
+    def construct ( self ):
+        clefType = "G"
+        staffLength = 70
+        melody = np.array ((
+            0, 4, 7, -1, 0, 2, 0,
+            9, 7, 12, 7, 5, 4, 5, 4,
+        ))
+        newKeyAcciCount = -1
+        newKeyTonic = newKeyAcciCount * 7 % 12
+        alteredDegrees = _getAlteredDegrees ( newKeyAcciCount )
+        noteDegrees = np.array ((
+            0, 2, 4, -1, 0, 1, 0,
+            5, 4, 7, 4, 3, 2, 3, 2,
+        ))
+        melodyAccidentals = ( 
+            ( -1 if newKeyAcciCount < 0 else 1 ) 
+            if i in alteredDegrees else None 
+            for i in noteDegrees 
+        )
+        scaleAccidentals = ( 
+            ( -1 if newKeyAcciCount < 0 else 1 ) 
+            if i in alteredDegrees else None 
+            for i in range ( 7 ) 
+        )
+        
+        
+        staff1Center = np.array (( 0, 1.75, 0 ))
+        staff2Center = np.array (( 0, -1.25, 0 ))
+        
+        
+        mob_textTitle = Tex ( "音程关系 $\\rightarrow$ 频率比", **newLatexConfig ( fs = 1.25 ) )\
+            .to_corner ( UL, buff = 0.25 )
+        mob_frequencyNote = Text ( 
+            "频率 (单位 Hz)", color = YELLOW, 
+            **textConfig 
+        ).to_corner ( UR, buff = 0.25 )
+        
+        # 上方谱表，展示 C 大调的旋律
+        mob_staff1 = Staff ( **staffConfig, staffLength = staffLength )\
+            .move_to ( staff1Center )
+        mob_clef1 = mob_staff1.createClef ( clefType ).setHpos ( 2 )
+        mob_melody1 = mob_staff1.createScale ( 
+            vpos = noteDegrees + 1, 
+            buff = 3, accidentalSpaceRatio = 0,
+        ).after ( mob_clef1, 3 )
+        
+        # 下方谱表，展示 F 大调的旋律
+        mob_staff2 = Staff ( **staffConfig, staffLength = staffLength )\
+            .move_to ( staff2Center )
+        mob_clef2 = mob_staff2.createClef ( clefType ).setHpos ( 2 )
+        mob_melody2 = mob_staff2.createScale ( 
+            vpos = noteDegrees + 4, 
+            accidentals = melodyAccidentals,
+            buff = 3, accidentalSpaceRatio = 0,
+        ).after ( mob_clef2, 3 )
+        
+        # 出示谱表 1
+        self.play ( FadeIn ( mob_textTitle, run_time = 0.5 ) )
+        self.play ( Create ( mob_staff1, run_time = 1 ) )
+        
+        # 谱表 1 下移得到谱表 2
+        mob_temp = mob_staff1.copy ( )
+        self.play ( Transform ( mob_temp, mob_staff2, run_time = 1 ) )
+        self.remove ( mob_temp )
+        self.add ( mob_staff2 )
+        self.play ( FadeIn ( mob_frequencyNote, run_time = 0.5 ) )
+        
+        # 谱表 1 上音符的频率
+        mob_freqTexts1 = VGroup ( )
+        for mob_note, tone in zip ( mob_melody1, melody ):
+            freq = pitch2Freq ( tone + 72 )
+            mob_freqText = Text ( f"{freq:.2f}", color = YELLOW, **textConfig )\
+                .rotate ( -PI / 4 )\
+                .align_to ( mob_note.mob_noteheads, LEFT )
+            stableNextTo ( mob_freqText, mob_note.parent.mob_staffLines, DOWN, 0.3 )
+            self.add ( mob_freqText )
+            mob_freqTexts1.add ( mob_freqText )
+            self.wait ( 0.05 )
+        
+        # 谱表 2 上音符的频率
+        mob_freqTexts2 = VGroup ( )
+        def _getAnimations ( ):
+            for mob_note, tone, mob_oldFreqText in zip ( mob_melody2, melody, mob_freqTexts1 ):
+                freq = pitch2Freq ( tone + 72 + newKeyTonic )
+                mob_freqText = mob_oldFreqText.copy ( )
+                mob_transformResult = Text ( f"{freq:.2f}", color = YELLOW, **textConfig )\
+                    .rotate ( -PI / 4 )\
+                    .align_to ( mob_note.mob_noteheads, LEFT )
+                stableNextTo ( mob_transformResult, mob_note.parent.mob_staffLines, DOWN, 0.3 )
+                mob_freqTexts2.add ( mob_freqText )
+                yield Transform ( mob_freqText, mob_transformResult )
+        
+        self.play ( 
+            LaggedStart ( 
+                *_getAnimations ( ), 
+                lag_ratio=0.25 
+            ), 
+            run_time = 3 
+        )
+        
+        # 显示频率之间的比例关系
+        mob_arrow = Line ( 
+            mob_clef1.get_critical_point ( DOWN ) + DOWN * 0.25,
+            mob_clef2.get_critical_point ( UP ) + UP * 0.25,
+            color = RED, 
+        ).add_tip ( **tipConfig )
+        mob_freqRatioText = MathTex (
+            rf"\times 2^{{{ frac2Latex ( Q ( newKeyTonic, 12 ), slant = True ) }}}",
+            color = RED,
+            **newLatexConfig ( fs = 1.25 )
+        )   .next_to ( mob_arrow, RIGHT, buff = 0.25 )\
+            .shift ( DOWN * 0.25 )
+        self.play ( 
+            Create ( mob_arrow, run_time = 1 ),
+            FadeIn ( mob_freqRatioText, run_time = 0.5 )
+        )
+        
+        mob_staff1.remove ( mob_melody1 )
+        mob_staff2.remove ( mob_melody2 )
+        self.add ( mob_melody1, mob_melody2 )
+        
+        mob_scale1 = mob_staff1.createScale (
+            vpos = np.arange ( 7 ) - 6,
+            buff = 7, accidentalSpaceRatio = 0,
+            add = False,
+        ).shiftHpos ( 15 )
+        mob_scale2 = mob_staff2.createScale (
+            vpos = np.arange ( 7 ) - 6 + newKeyTonic,
+            accidentals = scaleAccidentals,
+            buff = 7, accidentalSpaceRatio = 0,
+            add = False,
+        ).shiftHpos ( 15 )
+        
+        def getScaleFreqTexts ( mob_scale: Scale, startTone: int = 0 ):
+            mob_staff = mob_scale.parent
+            mob_scaleFreqTexts = VGroup ( )
+            for i, mob_note in enumerate ( mob_scale ):
+                mob_freqText = Text ( 
+                    f"{pitch2Freq ( 60 + _majorScale [ i ] + startTone ):.2f}",
+                    color = YELLOW, **textConfig,
+                ).move_to ( mob_note.get_center ( ) )
+                mob_freqText.next_to ( mob_note.mob_noteheads, DOWN, 0.25 )
+                belowNotePosition = mob_freqText.get_center ( )
+                stableNextTo ( mob_freqText, mob_staff.mob_staffLines, DOWN, 0.4 )
+                belowStaffPostion = mob_freqText.get_center ( )
+                y1, y2 = belowNotePosition [ 1 ], belowStaffPostion [ 1 ]
+                if y1 < y2: mob_freqText.move_to ( belowNotePosition )
+                mob_scaleFreqTexts.add ( mob_freqText )
+            return mob_scaleFreqTexts
+        
+        mob_scaleFreqTexts1 = getScaleFreqTexts ( mob_scale1 )
+        mob_scaleFreqTexts2 = getScaleFreqTexts ( mob_scale2, newKeyTonic )
+        
+        self.play (
+            Transform ( mob_melody1, mob_scale1 ),
+            Transform ( mob_melody2, mob_scale2 ),
+            Transform ( mob_freqTexts1, mob_scaleFreqTexts1 ),
+            Transform ( mob_freqTexts2, mob_scaleFreqTexts2 ),
+            run_time = 1,
+        )
+        self.play (  
+            FadeOut ( mob_arrow, mob_freqRatioText, run_time = 0.5 ),
+        )
+        
+        mob_keyNameText1 = _createKeyNameText ( 0, fs = 1.25 )\
+            .next_to ( mob_staff1, DOWN, buff = 0.25 )\
+            .align_to ( mob_staff1, LEFT )
+        mob_keyNameText2 = _createKeyNameText ( newKeyAcciCount, fs = 1.25 )\
+            .next_to ( mob_staff2, DOWN, buff = 0.25 )\
+            .align_to ( mob_staff2, LEFT )
+            
+        self.play (
+            FadeIn ( 
+                mob_keyNameText1, mob_keyNameText2,
+                run_time = 0.5,
+            ),
+        )
+
+        self.wait ( 2 )
+        
 class MajorScaleScene ( Scene ):
     def construct ( self ):
         numberLinePosition = np.array (( 0, 2, 0 ))

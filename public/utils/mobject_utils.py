@@ -1,6 +1,8 @@
 from typing import TypeVar
 from manim import *
 
+__all__ = [ "stableNextTo" ]
+
 M = TypeVar ( "M", bound = Mobject )
 def stableNextTo (
     mob1: M, mob2: Mobject, 

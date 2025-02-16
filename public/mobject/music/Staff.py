@@ -158,6 +158,10 @@ class StaffElement ( VGroup, metaclass = ABCMeta ):
         """
         return self.get_width ( ) / self.sp
     
+    def shiftHpos ( self, delta: float ) -> Self:
+        self.shift ( delta * self.sp * RIGHT )
+        return self
+    
 class PositionedStaffElement ( StaffElement, PositionedMobject ):
     def __init__ ( self, parent, **kwargs ):
         super ( ).__init__ ( parent, **kwargs )
