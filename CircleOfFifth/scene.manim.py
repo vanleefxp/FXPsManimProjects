@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from fractions import Fraction as Q
 import itertools as it
+import operator as op
 
 from manim import *
 import manim.utils.rate_functions as rf   
@@ -33,6 +34,25 @@ tipConfig = pyr.m (
 )
 
 _noteNames = np.array (( "C", "D", "E", "F", "G", "A", "B" ))
+_intervalQualityNames = pyr.pmap ( {
+    -3: "倍减",
+    -2: "减",
+    -1: "小",
+    0: "纯",
+    1: "大",
+    2: "增",
+    3: "倍增",
+} )
+_intervalQualityLetters = pyr.pmap ( {
+    -3: "dd",
+    -2: "d",
+    -1: "m",
+    0: "P",
+    1: "M",
+    2: "A",
+    3: "AA",
+} )
+_cnNumbers = pyr.pvector ([ "一", "二", "三", "四", "五", "六", "七", "八", "九" ])
 _majorScale = np.sort ( np.arange ( -1, 6 ) * 7 % 12 )
 _co5DegreeOrder = ( np.arange ( -1, 6 ) * 4 ) % 7
 _co5DegreeArgs = np.argsort ( _co5DegreeOrder )
@@ -130,15 +150,49 @@ def _createKeyNameText (
     )
     return mob_text
 
+@np.vectorize ( excluded = ( 1, ) )
 def pitch2Freq ( pitch: float, a4Freq: float = 440 ) -> float:
     return a4Freq * 2 ** ( ( pitch - 69 ) / 12 )
 
+def scaleDegree2Tone ( degree: int, tonic: int = 0 ) -> int:
+    octave, octaveDegree = divmod ( degree, 7 )
+    return _majorScale [ octaveDegree ] + tonic + octave * 12
+
+def getIntervalQuality ( startDegree: int, degreeDiff: int ) -> int:
+    toneDiff = ( 
+        scaleDegree2Tone ( startDegree + degreeDiff ) - 
+        scaleDegree2Tone ( startDegree )
+    ) % 12
+    standardToneDiff = _majorScale [ degreeDiff % 7 ]
+    if degreeDiff in ( 0, 3, 4, 7 ):
+        if toneDiff == standardToneDiff: return 0 # perfect
+        elif toneDiff > standardToneDiff: 
+            # augmented or multiply augmented
+            return toneDiff - standardToneDiff + 1
+        else:
+            # diminished or multiply diminished
+            return toneDiff - standardToneDiff - 1
+    elif toneDiff >= standardToneDiff:
+        # major, augmented or multiply augmented
+        return toneDiff - standardToneDiff + 1
+    else:
+        # minor, diminished or multiply diminished
+        return toneDiff - standardToneDiff
+
+def getIntervalAbbr ( startDegree: int, degreeDiff: int ) -> str:
+    quality = getIntervalQuality ( startDegree, degreeDiff )
+    return f"{_intervalQualityLetters [ quality ]}{degreeDiff + 1}"
+
+def getIntervalName ( startDegree: int, degreeDiff: int ) -> str:
+    quality = getIntervalQuality ( startDegree, degreeDiff )
+    return f"{_intervalQualityNames [ quality ]}{_cnNumbers [ degreeDiff ]}度"
+
 class TestScene ( Scene ):
     def construct ( self ):
-        mob_line = Line ( LEFT * config.frame_x_radius, RIGHT * config.frame_x_radius )
-        mob_text = MusicGlyph ( "\ue260" ).toPosition ( ( 2, 1, 0 ) )
-        print ( mob_text.get_center ( ) ) 
-        self.add ( mob_text, mob_line )
+        mob_noteBlock = NoteBlock ( )
+        self.add ( mob_noteBlock )
+        self.play ( mob_noteBlock.animatePlay ( ) )
+        self.wait ( 2 )  
 
 class IntroScene ( Scene ):
     def construct ( self ):
@@ -194,21 +248,491 @@ class IntroScene ( Scene ):
         
         self.wait ( 2 )
 
+class FrequencyAndIntervalScene ( Scene ):
+    def construct ( self ):
+        clefType = "G"
+        
+        mob_keyboard = MultiOctavePianoKeyboard ( octaves = 4, **keyboardConfig )\
+            .center ( ).to_edge ( UP, buff = 1.5 )
+        mob_staff = Staff ( **staffConfig, staffLength = 35 )\
+            .next_to ( mob_keyboard, DOWN, buff = 1.5 )\
+            .align_to ( mob_keyboard, LEFT )
+        
+        staffPosition = mob_staff.get_center ( )
+        freqTextPosition = staffPosition.copy ( )
+        noteNameTextPosition = staffPosition.copy ( )
+        noteNameTextPosition [ 0 ] = 2
+        freqTextPosition [ 0 ] = 4.5
+        
+        mob_clef = mob_staff.createClef ( clefType )\
+            .setHpos ( 2 )
+        
+        self.play (
+            FadeIn (
+                mob_keyboard, mob_staff,
+                run_time = 1,
+            )
+        )
+        
+        mask = np.array (( 0, -1, 1, -1, 2, 3, -1, 4, -1, 5, -1, 6 ))
+
+        def animatePitch ( tone: int, acciPref: int = 1 ):
+            octave, octaveTone = divmod ( tone, 12 )
+            acciPref = 1 if acciPref >= 0 else -1
+            midiNote = tone + 60
+            freq = pitch2Freq ( midiNote )
+            
+            octaveScaleDegree = mask [ octaveTone ]
+            acci = None
+            if octaveScaleDegree < 0:
+                octaveScaleDegree = mask [ octaveTone - acciPref ]
+                acci = acciPref
+            scaleDegree = octaveScaleDegree + octave * 7
+            
+            mob_note = mob_staff.createNote ( 
+                scaleDegree - 6, 
+                noteheadType = "whole",
+                accidental = acci,
+                add = False,
+            ).setHpos ( 20 )
+            noteNameText = f"{_noteNames [ octaveScaleDegree ]}$_{{{octave + 4}}}$"
+            if acci is not None:
+                if acci > 0: noteNameText = r"{\sh}" + noteNameText
+                if acci < 0: noteNameText = r"{\fl}" + noteNameText
+            mob_noteNameText = Tex (
+                noteNameText,
+                **newLatexConfig ( fs = 1.5 ),
+            ).move_to ( noteNameTextPosition )
+            mob_freqText = Text ( f"{freq:.2f} Hz", **newTextConfig ( fs = 1.5 ) )\
+                .move_to ( freqTextPosition )
+            addMidi ( self, midiNote )
+            self.add ( mob_note, mob_noteNameText, mob_freqText )
+            mob_keyboard.markKey ( tone + 12 )
+            self.wait ( 1 )
+            self.play (
+                mob_keyboard.animate.resetMarks ( ),
+                FadeOut ( mob_note, mob_noteNameText, mob_freqText ),
+                run_time = 0.5,
+            )
+        
+        def animateInterval ( startDegree: int, degreeDiff: int ):
+            degrees = np.arange ( degreeDiff + 1 ) + startDegree
+            mob_scale = mob_staff.createScale (
+                degrees - 6,
+                noteheadType = it.chain ( 
+                    ( "whole", ), 
+                    it.repeat ( "black", degreeDiff - 1 ), 
+                    ( "whole", ) 
+                ),
+                buff = 1.5,
+                add = False,
+            ).shiftHpos ( 10 )
+            
+            startTone = scaleDegree2Tone ( startDegree )
+            endTone = scaleDegree2Tone ( startDegree + degreeDiff )
+            
+            for i, mob_note in enumerate ( mob_scale ):
+                degree = startDegree + i
+                tone = scaleDegree2Tone ( degree )
+                self.add ( mob_note )
+                mob_keyboard.resetMarks ( )\
+                    .markKey ( tone + 12 )\
+                    .markKey ( startTone + 12, markColor = MARK_GREEN )
+                self.wait ( 0.25 )
+                
+            mob_firstNote = mob_scale [ 0 ]
+            mob_lastNote = mob_scale [ -1 ]
+            arrowStartPoint = mob_firstNote.mob_noteheads.get_center ( )
+            arrowEndPoint = mob_lastNote.mob_noteheads.get_center ( )
+            mob_arrow = ArcBetweenPoints ( 
+                arrowStartPoint, arrowEndPoint, - PI / 2,
+                color = RED,
+            ).add_tip ( **tipConfig ).shift ( UP * 0.25 )
+            mob_intervalText = Text (
+                getIntervalAbbr ( startDegree, degreeDiff ),
+                **newTextConfig ( fs = 1.5 ),
+            ).move_to ( noteNameTextPosition )
+            mob_intervalNameText = Text (
+                getIntervalName ( startDegree, degreeDiff ),
+                **newTextConfig ( fs = 1.5 ),
+            ).move_to ( freqTextPosition )
+            
+            self.play ( 
+                Create ( mob_arrow ), 
+                FadeIn ( mob_intervalText, mob_intervalNameText ),
+                run_time = 0.5 
+            )
+            self.wait ( 0.5 )
+            self.play (
+                FadeOut ( mob_scale [ 1 : -1 ], mob_arrow ),
+                mob_scale [ 0 ].animate.setHpos ( 14 ),
+                mob_scale [ -1 ].animate.setHpos ( 22 ),
+                mob_keyboard.animate\
+                    .resetMarks ( )\
+                    .markKey ( startTone + 12, markColor = MARK_GREEN )\
+                    .markKey ( endTone + 12, markColor = MARK_GREEN ),
+                run_time = 0.5,
+            )
+            self.wait ( 2 )
+            self.play (
+                FadeOut (
+                    mob_scale [ 0 ], mob_scale [ -1 ],
+                    mob_intervalText, mob_intervalNameText,
+                ),
+                mob_keyboard.animate.resetMarks ( ),
+                run_time = 0.5,
+            )
+        
+        animatePitch ( 0 )
+        animatePitch ( 9 )
+        # np.random.seed ( 0 )
+        # randomTones = np.arange ( 24 )
+        # print ( randomTones )
+        # for randomTone in randomTones:
+        #     animatePitch ( randomTone )
+            
+        self.next_section ( )
+        
+        animateInterval ( 0, 7 ) # 纯八度
+        animateInterval ( 1, 7 ) # 纯八度
+        
+        # 展示八度的频率比为 2
+        
+        mob_longStaff = Staff ( **staffConfig, staffLength = 70 )\
+            .center ( ).next_to ( mob_keyboard, DOWN, buff = 1.5 )
+        mob_longStaff.createClef ( "F" ).setHpos ( 2 )
+        mob_longStaff.createClef ( "G", change = True ).setHpos ( 22 )
+        mob_octaves = mob_longStaff.createScale ( 
+            ( -1, -6, 1, 8 ),
+            noteheadType = "whole",
+            buff = it.chain ( ( 20, ), it.repeat ( 12 ) ),
+            add = False,
+        ).shiftHpos ( 12 )
+        
+        mob_freqNote = Text ( 
+            "频率 (Hz)", **textConfig, 
+            color = YELLOW 
+        )   .align_to ( mob_longStaff.mob_staffLines, LEFT )\
+            .next_to ( mob_longStaff.mob_staffLines, UP, buff = 0.25, coor_mask = UP )
+        
+        mob_temp = mob_staff.copy ( )
+        self.remove ( mob_staff )
+        self.add ( mob_temp )
+        self.play ( 
+            FadeIn ( mob_freqNote ),
+            Transform ( mob_temp, mob_longStaff ), 
+            run_time = 1,
+        )
+        self.remove ( mob_temp )
+        self.add ( mob_longStaff )
+        
+        mob_lastNote = None
+        mob_lastFreqText = None
+        mob_freqTexts = VGroup ( )
+        
+        for i, mob_note in enumerate ( mob_octaves ):
+            mob_freqText = Text ( 
+                f"{pitch2Freq ( 12 * ( i + 4 ) ):.2f}", 
+                **textConfig,
+                color = YELLOW,
+            )   .move_to ( mob_note.mob_noteheads )\
+                .next_to ( 
+                    mob_longStaff.mob_staffLines, DOWN, 
+                    buff = 0.4, coor_mask = UP,
+                )
+            mob_freqTexts.add ( mob_freqText )
+            
+            if mob_lastNote is None:
+                self.play (
+                    FadeIn ( mob_freqText, mob_note ),
+                    mob_keyboard.animate\
+                        .markKey ( i * 12, markColor = MARK_GREEN ),
+                    run_time = 0.5,
+                )
+                self.wait ( 1 )
+            else:
+                mob_tempNote = mob_lastNote.copy ( )
+                mob_tempFreqText = mob_lastFreqText.copy ( )
+                mob_tempFreqText.save_state ( )
+                mob_tempFreqText.move_to ( mob_freqText )
+                mob_mul2Text = MathTex ( 
+                    r"\times 2", color = RED, 
+                    **latexConfig 
+                ).next_to ( mob_tempFreqText, RIGHT, 0.2 )
+                mob_tempFreqText.restore ( )
+                
+                arrowStartPoint = mob_lastNote.mob_noteheads.get_center ( )
+                arrowEndPoint = mob_note.mob_noteheads.get_center ( )
+                mob_arrow = ArcBetweenPoints (
+                    arrowStartPoint, arrowEndPoint, -PI / 2,
+                    color = RED,
+                ).add_tip ( **tipConfig ).shift ( UP * 0.25 )
+                
+                self.add ( mob_tempNote, mob_tempFreqText )
+                self.play (
+                    Transform ( mob_tempNote, mob_note, run_time = 1 ),
+                    mob_tempFreqText.animate ( run_time = 1 )\
+                        .move_to ( mob_freqText ),
+                    Succession (
+                        Wait ( 0.5 ),
+                        AnimationGroup (
+                            FadeIn ( mob_mul2Text ),
+                            Create ( mob_arrow ),
+                            mob_keyboard.animate\
+                                .markKey ( i * 12, markColor = MARK_GREEN ),
+                            run_time = 0.5
+                        )
+                    )
+                )
+                self.play (
+                    Transform ( mob_tempFreqText, mob_freqText ),
+                    FadeOut ( mob_mul2Text ),
+                    run_time = 0.5
+                )
+                mob_arrow.reverse_points ( )
+                self.play (
+                    Uncreate ( mob_arrow ),
+                    run_time = 0.5,
+                )
+                self.remove ( mob_tempNote, mob_tempFreqText )
+                self.add ( mob_note, mob_freqText )
+            
+            mob_lastNote = mob_note
+            mob_lastFreqText = mob_freqText
+        
+        self.wait ( 2 )
+        
+        mob_temp = mob_longStaff.copy ( )
+        self.remove ( mob_longStaff )
+        self.add ( mob_temp )
+        self.play ( 
+            Transform ( 
+                mob_temp, mob_staff, 
+                run_time = 1 
+            ), 
+            FadeOut ( 
+                mob_octaves, mob_freqNote, *mob_freqTexts,
+                run_time = 0.5,
+            ),
+            mob_keyboard.animate.resetMarks ( ),
+        )
+        self.remove ( mob_temp )
+        self.add ( mob_staff )
+        
+        animateInterval ( 0, 4 ) # 纯五度
+        animateInterval ( 0, 2 ) # 大三度
+        animateInterval ( 0, 5 ) # 大六度
+        self.wait ( 2 )
+
+class FrequencyExponentialScene ( Scene ):
+    def construct ( self ):
+        w, h = 10, 5
+        xbuff, ybuff = 3, 25
+        nOctaves = 3
+        xStart = 60
+        xEnd = xStart + nOctaves * 12
+        xFocusEnd = xStart + 12
+        xmin, xmax = xStart - xbuff, xEnd + xbuff
+        xFocusMax = xFocusEnd + xbuff
+        ymin, ymax = 0, pitch2Freq ( xmax ) + ybuff
+        yFocusMax = pitch2Freq ( xFocusMax ) + ybuff
+        boxCenter = np.array (( 0.25, 0.15, 0 ))
+        
+        mob_box = Rectangle ( height = 5, width = 10 )\
+            .set_stroke ( width = 2 )\
+            .move_to ( boxCenter )
+        mob_axes = Axes ( 
+            x_length = w, y_length = h,
+            x_range = ( xmin, xmax ),
+            y_range = ( ymin, ymax ),
+        )
+        mob_axes.shift ( 
+            Rectangle.get_critical_point ( mob_box, DL ) -
+            mob_axes.coords_to_point ( xmin, ymin )
+        )
+        mob_graph = mob_axes.plot ( pitch2Freq, color = RED )\
+            .set_z_index ( 1 )
+        mob_pitchText = Text ( "音高 (半音)", **textConfig )\
+            .align_to ( mob_box, DR ).shift ( 0.25 * UL )\
+            .add_background_rectangle ( )\
+            .set_z_index ( 2 )
+        mob_freqText = Text ( "频率 (Hz)", **textConfig )\
+            .align_to ( mob_box, UL ).shift ( 0.25 * DR )\
+            .add_background_rectangle ( )\
+            .set_z_index ( 2 )
+        mob_pitchNoteText = Tex ( 
+            "注：此处 $x$ 轴的 60 表示钢琴键盘上中央 C 的位置",
+            **latexConfig,
+        ).to_corner ( UL, 0.25 )
+        
+        self.play ( FadeIn ( mob_box, mob_pitchText, mob_freqText, run_time = 1 ) )
+        self.play ( Create ( mob_graph, run_time = 1 ) )
+        
+        var_pitch = ValueTracker ( 60 )
+        mob_lineToX = Line ( stroke_width = 2 ).set_stroke ( opacity = 0.5 )
+        mob_lineToY = Line ( stroke_width = 2 ).set_stroke ( opacity = 0.5 )
+        mob_pointOnCurve = Dot ( radius = 0.06 ).set_z_index ( 2 )
+        mob_freqValue = DecimalNumber ( 0, font_size = latexFs ( 1 ) )
+        mob_pitchValue = Integer ( 0, font_size = latexFs ( 1 ) )
+        
+        def _update ( mob: Mobject | None = None ):
+            x = var_pitch.get_value ( )
+            y = pitch2Freq ( x )
+            pointOnCurve = mob_axes.coords_to_point ( x, y )
+            pointOnX = mob_axes.coords_to_point ( x, ymin )
+            pointOnY = mob_axes.coords_to_point ( xmin, y )
+            mob_lineToX.put_start_and_end_on ( pointOnX, pointOnCurve )
+            mob_lineToY.put_start_and_end_on ( pointOnY, pointOnCurve )
+            mob_pointOnCurve.move_to ( pointOnCurve )
+            mob_freqValue.set_value ( y ).next_to ( pointOnY, LEFT, 0.25 )
+            mob_pitchValue.set_value ( x ).next_to ( pointOnX, DOWN, 0.25 )
+            
+        mob_lineToX.add_updater ( _update )
+        _update ( ) 
+        self.play ( 
+            FadeIn ( 
+                mob_lineToX, mob_lineToY, mob_pointOnCurve,
+                mob_pitchValue, mob_freqValue, 
+                mob_pitchNoteText,
+                run_time = 0.5 
+            ) 
+        )
+        self.wait ( 0.5 )
+        self.play (
+            var_pitch.animate.set_value ( xEnd ),
+            run_time = 5,
+            rate_func = rf.ease_in_out_quad,
+        )
+        self.wait ( 0.5 )
+        self.play (
+            var_pitch.animate.set_value ( xStart ),
+            run_time = 5,
+            rate_func = rf.ease_in_out_quad,
+        )
+        self.wait ( 2 )
+        mob_lineToX.clear_updaters ( )
+        
+        def createIndication ( i, showFreq: bool = False ):
+            x = 60 + i
+            y = pitch2Freq ( x )
+            pointOnCurve = mob_axes.coords_to_point ( x, y )
+            pointOnX = mob_axes.coords_to_point ( x, ymin )
+            pointOnY = mob_axes.coords_to_point ( xmin, y )
+            mob_lineToX = Line ( pointOnX, pointOnCurve, stroke_width = 2 )\
+                .set_stroke ( opacity = 0.5 )
+            mob_lineToY = Line ( pointOnY, pointOnCurve, stroke_width = 2 )\
+                .set_stroke ( opacity = 0.5 )
+            mob_pointOnCurve = Dot ( pointOnCurve, radius = 0.06 )\
+                .set_z_index ( 2 )
+            mob_pitchValue = Text ( f"{x}", **newTextConfig ( fs = 1 ) )\
+                .next_to ( pointOnX, DOWN, 0.25 )
+            mob_indication =  VGroup ( 
+                mob_lineToX, mob_lineToY, 
+                mob_pointOnCurve, mob_pitchValue, 
+            )
+            if showFreq:
+                mob_freqValue = Text ( f"{y:.2f}", **newTextConfig ( fs = 1 ) )\
+                    .next_to ( pointOnY, LEFT, 0.25 )
+                mob_indication.add ( mob_freqValue )
+            return mob_indication
+            
+        mob_indications = VGroup ( )
+        def _getAnimations ( ):
+            for i in range ( 1, 4 ):
+                mob_indication = createIndication ( i * 12, showFreq = True )
+                mob_indications.add ( mob_indication )
+                yield FadeIn ( mob_indication, run_time = 0.5 )
+        
+        self.play ( LaggedStart ( *_getAnimations ( ), lag_ratio = 0.5 ) )
+        self.wait ( 1 )
+        
+        mob_focusBox = rectByCorners (
+            mob_axes.c2p ( xmin, ymin ),
+            mob_axes.c2p ( xFocusMax, yFocusMax ),
+        )   .set_fill ( color = WHITE, opacity = 0.25 )\
+            .set_stroke ( width = 0, opacity = 0 )
+        
+        var_t = ValueTracker ( 0 )
+        
+        def updateGraph ( mob ):
+            nonlocal mob_axes
+            t = var_t.get_value ( )
+            newXMax = xmax - ( xmax - xFocusMax ) * t
+            newYMax = ymax - ( ymax - yFocusMax ) * t
+            mob_axes = Axes (
+                x_length = w, y_length = h,
+                x_range = ( xmin, newXMax ),
+                y_range = ( ymin, newYMax ),
+            )
+            mob_axes.shift ( 
+                Rectangle.get_critical_point ( mob_box, DL ) -
+                mob_axes.coords_to_point ( xmin, ymin )
+            )
+            mob.become (  
+                mob_axes.plot ( pitch2Freq, color = RED )\
+                    .set_z_index ( 1 )
+            )
+            
+        def updateFocusBox ( mob ):
+            newEndpoint = mob_axes.c2p ( xFocusMax, yFocusMax )
+            reshapeToCorners ( 
+                mob, 
+                mob_box.get_critical_point ( DL ),
+                newEndpoint 
+            )
+        
+        self.play (
+            FadeIn ( mob_focusBox, run_time = 0.5 ),
+        )
+        mob_graph.add_updater ( updateGraph )
+        mob_focusBox.add_updater ( updateFocusBox )
+        self.play (
+            FadeOut (
+                mob_lineToX, mob_lineToY, 
+                mob_pointOnCurve,
+                mob_pitchValue, mob_freqValue,
+                mob_indications,
+                run_time = 0.5
+            ),
+            var_t.animate ( run_time = 1 ).set_value ( 1 ),
+        )
+        mob_graph.clear_updaters ( )
+        mob_focusBox.clear_updaters ( )
+        self.play ( FadeOut ( mob_focusBox, run_time = 0.25 ) )
+        
+        mob_indications = VGroup ( )
+        def _getAnimations ( ):
+            for i in range ( 13 ):
+                mob_indication = createIndication ( i, showFreq = i % 12 == 0 )
+                mob_indications.add ( mob_indication )
+                yield FadeIn ( mob_indication, run_time = 0.5 )
+        self.play ( LaggedStart ( *_getAnimations ( ), lag_ratio = 0.5 ) )
+        self.wait ( 2 ) 
+
 class FrequencyRatioScene ( Scene ):
     def construct ( self ):
         clefType = "G"
         staffLength = 70
-        melody = np.array ((
-            0, 4, 7, -1, 0, 2, 0,
-            9, 7, 12, 7, 5, 4, 5, 4,
-        ))
         newKeyAcciCount = -1
         newKeyTonic = newKeyAcciCount * 7 % 12
+        newKeyStartDegree = newKeyAcciCount * 4 % 7
         alteredDegrees = _getAlteredDegrees ( newKeyAcciCount )
+        
         noteDegrees = np.array ((
             0, 2, 4, -1, 0, 1, 0,
             5, 4, 7, 4, 3, 2, 3, 2,
         ))
+        noteDurations = np.array ((
+            2, 1, 1, 1.5, 0.25, 0.25, 2,
+            2, 1, 1, 1, 0.5, 0.25, 0.25, 1,
+        ))
+        summedNoteDurations = np.empty ( len ( noteDurations ) )
+        summedNoteDurations [ 0 ] = 0
+        summedNoteDurations [ 1: ] = np.cumsum ( noteDurations [ :-1 ] )
+        bpm = 144
+        q, r = np.divmod ( noteDegrees, 7 )
+        melody = q * 12 + _majorScale [ r ]
+        
         melodyAccidentals = ( 
             ( -1 if newKeyAcciCount < 0 else 1 ) 
             if i in alteredDegrees else None 
@@ -220,10 +744,12 @@ class FrequencyRatioScene ( Scene ):
             for i in range ( 7 ) 
         )
         
-        
+        freqs1Center = np.array (( 0, 1.35, 0 ))
+        freqs2Center = np.array (( 0, -1.35, 0 ))
         staff1Center = np.array (( 0, 1.75, 0 ))
         staff2Center = np.array (( 0, -1.25, 0 ))
         
+        # 第一部分：频率展示
         
         mob_textTitle = Tex ( "音程关系 $\\rightarrow$ 频率比", **newLatexConfig ( fs = 1.25 ) )\
             .to_corner ( UL, buff = 0.25 )
@@ -231,6 +757,89 @@ class FrequencyRatioScene ( Scene ):
             "频率 (单位 Hz)", color = YELLOW, 
             **textConfig 
         ).to_corner ( UR, buff = 0.25 )
+        
+        def createFreqs ( freqs ):
+            mob_noteBlocks = Group ( 
+                *(
+                    NoteBlock ( size = 0.75 )
+                    for _ in range ( len ( freqs ) )
+                ),
+            )
+            mob_freqTexts = VGroup (
+                *(
+                    Text ( 
+                        f"{freq: 4.2f}", 
+                        **newTextConfig ( fs = 1.25 ) 
+                    ) 
+                    for freq in freqs
+                ),  
+            )
+            Group ( *mob_noteBlocks, *mob_freqTexts )\
+                .arrange_in_grid ( rows = 2, buff = 0.25 )
+            return Group ( mob_noteBlocks, mob_freqTexts )
+        
+        self.play ( FadeIn ( mob_textTitle, run_time = 0.5 ) )
+        freqs = pitch2Freq ( melody [ :7 ] + 72 )
+        mob_freqs1 = createFreqs ( freqs )
+        
+        self.play ( 
+            FadeIn ( mob_freqs1 [ 0 ], run_time = 0.5 ), 
+            Write ( mob_freqs1 [ 1 ], run_time = 1 ),
+        )
+        
+        def getMelodyAnimations ( mob_freqs, tonic: int = 0 ):
+            for mob_noteBlock, mob_text, startDur, tone in \
+                    zip ( *mob_freqs, summedNoteDurations, melody ):
+                delay = startDur * 60 / bpm
+                addMidi ( 
+                    self, generateNoteMidi ( tone + 72 + tonic ), 
+                    timeOffset = delay 
+                )
+                yield Succession (
+                    Wait ( delay ),
+                    AnimationGroup (
+                        Indicate ( mob_text, run_time = 0.5 ),
+                        mob_noteBlock.animatePlay ( ),
+                    ),
+                )
+        
+        self.play ( *getMelodyAnimations ( mob_freqs1 ) )
+        self.play ( mob_freqs1.animate.move_to ( freqs1Center ), run_time = 1 )
+        
+        newFreqs = pitch2Freq ( melody [ :7 ] + 72 + newKeyTonic )
+        mob_freqs2 = createFreqs ( newFreqs )\
+            .move_to ( freqs2Center )
+            
+        mob_temp = mob_freqs1.copy ( )
+        self.play ( mob_temp.animate.move_to ( freqs2Center ), run_time = 1 )
+        
+        mob_multiplyTexts = VGroup ( )
+        for mob_freqText in mob_temp [ 1 ]:
+            mob_multiplyText = MathTex ( 
+                fr"\times 2^{{{ Q ( newKeyTonic, 12 ) }}}",
+                color = RED,
+                **newLatexConfig ( fs = 1.25 )
+            ).next_to ( mob_freqText, DOWN, buff = 0.25 )
+            mob_multiplyTexts.add ( mob_multiplyText )
+        self.play ( FadeIn ( mob_multiplyTexts, run_time = 0.5 ) )
+        self.wait ( 0.5 )
+        self.play ( 
+            Transform ( mob_temp [ 1 ], mob_freqs2 [ 1 ], run_time = 1 ),
+            FadeOut ( mob_multiplyTexts ),
+        )
+        self.remove ( mob_temp )
+        self.add ( mob_freqs2 )
+        self.wait ( 1 )
+        self.play ( *getMelodyAnimations ( mob_freqs2, newKeyTonic ) )
+        self.wait ( 2 )
+        self.play ( 
+            FadeOut ( 
+                mob_freqs1, mob_freqs2, 
+                run_time = 0.5 
+            ) 
+        )
+        
+        # 第二部分：谱表展示
         
         # 上方谱表，展示 C 大调的旋律
         mob_staff1 = Staff ( **staffConfig, staffLength = staffLength )\
@@ -252,7 +861,6 @@ class FrequencyRatioScene ( Scene ):
         ).after ( mob_clef2, 3 )
         
         # 出示谱表 1
-        self.play ( FadeIn ( mob_textTitle, run_time = 0.5 ) )
         self.play ( Create ( mob_staff1, run_time = 1 ) )
         
         # 谱表 1 下移得到谱表 2
@@ -268,8 +876,8 @@ class FrequencyRatioScene ( Scene ):
             freq = pitch2Freq ( tone + 72 )
             mob_freqText = Text ( f"{freq:.2f}", color = YELLOW, **textConfig )\
                 .rotate ( -PI / 4 )\
-                .align_to ( mob_note.mob_noteheads, LEFT )
-            stableNextTo ( mob_freqText, mob_note.parent.mob_staffLines, DOWN, 0.3 )
+                .align_to ( mob_note.mob_noteheads, LEFT )\
+                .next_to ( mob_note.parent.mob_staffLines, DOWN, 0.3, coor_mask = UP )
             self.add ( mob_freqText )
             mob_freqTexts1.add ( mob_freqText )
             self.wait ( 0.05 )
@@ -282,18 +890,10 @@ class FrequencyRatioScene ( Scene ):
                 mob_freqText = mob_oldFreqText.copy ( )
                 mob_transformResult = Text ( f"{freq:.2f}", color = YELLOW, **textConfig )\
                     .rotate ( -PI / 4 )\
-                    .align_to ( mob_note.mob_noteheads, LEFT )
-                stableNextTo ( mob_transformResult, mob_note.parent.mob_staffLines, DOWN, 0.3 )
+                    .align_to ( mob_note.mob_noteheads, LEFT )\
+                    .next_to ( mob_note.parent.mob_staffLines, DOWN, 0.3, coor_mask = UP )
                 mob_freqTexts2.add ( mob_freqText )
                 yield Transform ( mob_freqText, mob_transformResult )
-        
-        self.play ( 
-            LaggedStart ( 
-                *_getAnimations ( ), 
-                lag_ratio=0.25 
-            ), 
-            run_time = 3 
-        )
         
         # 显示频率之间的比例关系
         mob_arrow = Line ( 
@@ -307,9 +907,14 @@ class FrequencyRatioScene ( Scene ):
             **newLatexConfig ( fs = 1.25 )
         )   .next_to ( mob_arrow, RIGHT, buff = 0.25 )\
             .shift ( DOWN * 0.25 )
+            
         self.play ( 
             Create ( mob_arrow, run_time = 1 ),
-            FadeIn ( mob_freqRatioText, run_time = 0.5 )
+            FadeIn ( mob_freqRatioText, run_time = 0.5 ),
+            LaggedStart ( 
+                *_getAnimations ( ), 
+                lag_ratio = 0.25, run_time = 4, 
+            ), 
         )
         
         mob_staff1.remove ( mob_melody1 )
@@ -317,37 +922,32 @@ class FrequencyRatioScene ( Scene ):
         self.add ( mob_melody1, mob_melody2 )
         
         mob_scale1 = mob_staff1.createScale (
-            vpos = np.arange ( 7 ) - 6,
+            vpos = np.arange ( 7 ) + 1,
             buff = 7, accidentalSpaceRatio = 0,
             add = False,
         ).shiftHpos ( 15 )
         mob_scale2 = mob_staff2.createScale (
-            vpos = np.arange ( 7 ) - 6 + newKeyTonic,
+            vpos = np.arange ( 7 ) + 1 + newKeyStartDegree,
             accidentals = scaleAccidentals,
             buff = 7, accidentalSpaceRatio = 0,
             add = False,
         ).shiftHpos ( 15 )
         
         def getScaleFreqTexts ( mob_scale: Scale, startTone: int = 0 ):
-            mob_staff = mob_scale.parent
             mob_scaleFreqTexts = VGroup ( )
             for i, mob_note in enumerate ( mob_scale ):
                 mob_freqText = Text ( 
-                    f"{pitch2Freq ( 60 + _majorScale [ i ] + startTone ):.2f}",
+                    f"{pitch2Freq ( 72 + _majorScale [ i ] + startTone ):.2f}",
                     color = YELLOW, **textConfig,
-                ).move_to ( mob_note.get_center ( ) )
-                mob_freqText.next_to ( mob_note.mob_noteheads, DOWN, 0.25 )
-                belowNotePosition = mob_freqText.get_center ( )
-                stableNextTo ( mob_freqText, mob_staff.mob_staffLines, DOWN, 0.4 )
-                belowStaffPostion = mob_freqText.get_center ( )
-                y1, y2 = belowNotePosition [ 1 ], belowStaffPostion [ 1 ]
-                if y1 < y2: mob_freqText.move_to ( belowNotePosition )
+                )   .move_to ( mob_note.get_center ( ) )\
+                    .next_to ( mob_note.parent.mob_staffLines, DOWN, 0.3 )
                 mob_scaleFreqTexts.add ( mob_freqText )
             return mob_scaleFreqTexts
         
         mob_scaleFreqTexts1 = getScaleFreqTexts ( mob_scale1 )
         mob_scaleFreqTexts2 = getScaleFreqTexts ( mob_scale2, newKeyTonic )
         
+        self.wait ( 1 )
         self.play (
             Transform ( mob_melody1, mob_scale1 ),
             Transform ( mob_melody2, mob_scale2 ),
@@ -355,6 +955,7 @@ class FrequencyRatioScene ( Scene ):
             Transform ( mob_freqTexts2, mob_scaleFreqTexts2 ),
             run_time = 1,
         )
+        self.wait ( 1 )
         self.play (  
             FadeOut ( mob_arrow, mob_freqRatioText, run_time = 0.5 ),
         )
@@ -373,6 +974,168 @@ class FrequencyRatioScene ( Scene ):
             ),
         )
 
+        self.wait ( 2 )
+
+class SineWaveScene ( Scene ):
+    def construct ( self ):
+        unitWavelength = 1
+        unitAmplitude = 0.6
+        
+        def getSineFunction ( freq: float, amp: float = 1 ):
+            return ( 
+                lambda x: amp * unitAmplitude * 
+                np.sin ( 2 * PI * freq * x / unitWavelength )
+            )
+        def combineFunctions ( 
+                operator: Callable [ ..., float ], 
+                *funcs: Callable [ [ float ], float ] 
+        ) -> Callable [ [ float ], float ]:
+            def _fn ( x: float ):
+                return operator ( *( fn ( x ) for fn in funcs ) )
+            return _fn
+        
+        rationalFreqs = ( Q ( 1 ), Q ( 5, 4 ), Q ( 3, 2 ) )
+        frequencies = np.array ( tuple ( map ( float, rationalFreqs ) ) )
+        denoms = np.array ( tuple ( fr.denominator for fr in rationalFreqs ) )
+        lcmDenoms = np.lcm.reduce ( denoms )
+        
+        bottomGap = 0.75
+        rx = config.frame_x_radius
+        ry = config.frame_y_radius
+        n = len ( frequencies ) + 1
+        totalHeight = 2 * ry - bottomGap
+        regionHeight = totalHeight / n
+        fillRate = 0.6
+        amp = regionHeight * fillRate / 2
+        colors = ( RED, GREEN, BLUE )
+        funcs = [ ]
+        
+        def createVline ( nPeriods: float ) -> Line:
+            x = -rx + nPeriods * unitWavelength
+            return Line (
+                ( x, -ry + bottomGap, 0 ), ( x, ry, 0 ),
+                stroke_width = 1,
+                stroke_opacity = 0.25
+            )
+        
+        mob_hlines = VGroup ( )
+        mob_vlines = VGroup ( )
+        for i in range ( n ):
+            y = -ry + bottomGap + i * regionHeight
+            mob_line = Line (
+                ( -rx, y, 0 ), ( rx, y, 0 ),
+                stroke_width = 2,
+                stroke_opacity = 0.5,
+            )
+            mob_hlines.add ( mob_line )
+        for i in range ( int ( 2 * rx // unitWavelength ) + 1 ):
+            mob_vlines.add ( createVline ( i ) )
+        
+        
+        def getSineFunction ( freq ):
+            return lambda x: np.sin ( TAU * x * freq )
+        
+        mob_graphs = VGroup ( )
+        mob_freqTexts = VGroup ( )
+        for i, ( freq, freqFrac ) in enumerate ( zip ( frequencies, rationalFreqs ) ):
+            y = -ry + bottomGap + ( i + 1.5 ) * regionHeight
+            ratioNumber = freqFrac.numerator * lcmDenoms // freqFrac.denominator
+            color = loop ( colors, i )
+            func = getSineFunction ( freq )
+            plotFunc = lambda x: func ( x / unitWavelength ) * amp
+            funcs.append ( func )
+            mob_graph = FunctionGraph ( 
+                plotFunc, x_range = ( 0, 4 * rx ), 
+                color = color 
+            ).shift ( ( -rx, y, 0 ) ).set_z_index ( 1 )
+            mob_graph.save_state ( )
+            mob_temp = FunctionGraph ( 
+                plotFunc, x_range = ( 0, 2 * rx ), 
+                color = color 
+            ).shift ( ( -rx, y, 0 ) ).set_z_index ( 1 )
+            mob_graph.become ( mob_temp )
+            
+            mob_freqText = Text ( str ( ratioNumber ), **newTextConfig ( fs = 2.5 ) )\
+                .shift ( UP * y ).to_edge ( RIGHT, buff = 0.5 )\
+                .add_background_rectangle ( buff = 0.2 )\
+                .set_z_index ( 2 )
+            mob_graphs.add ( mob_graph )
+            mob_freqTexts.add ( mob_freqText )
+        
+        def getMixedGraph ( n, storeState = False ):
+            y = -ry + bottomGap + regionHeight / 2
+            # if n == 0:
+            #     return Line ( ( -rx, y, 0 ), ( rx, y, 0 ), color = PINK )
+            if n == 0:
+                plotFunc = lambda _: 0
+            else:
+                mixedFunc = combineFunctions ( asVarArg ( np.average ), *funcs [ :n ] )
+                plotFunc = lambda x: mixedFunc ( x / unitWavelength ) * amp
+            
+            mob_temp = FunctionGraph ( 
+                plotFunc, color = PINK,
+                x_range = ( 0, 2 * rx ),
+            ).shift ( ( -rx, y, 0 ) ).set_z_index ( 1 )
+            
+            if storeState:
+                fullMixedFunc = combineFunctions ( asVarArg ( np.average ), *funcs [ :n ] )
+                fullPlotFunc = lambda x: fullMixedFunc ( x / unitWavelength ) * amp
+                mob_graph = FunctionGraph ( 
+                    fullPlotFunc, color = PINK,
+                    x_range = ( 0, 4 * rx ),
+                ).shift ( ( -rx, y, 0 ) ).set_z_index ( 1 )
+                mob_graph.save_state ( )
+                mob_graph.become ( mob_temp )
+            else:
+                mob_graph = mob_temp
+            
+            return mob_graph
+        
+        mob_mixedGraph = getMixedGraph ( 0, storeState = True )
+        mob_mixedGraphBg = Rectangle (
+            width = 2 * rx, height = regionHeight,
+            fill_opacity = 0.05,
+            stroke_width = 0,
+        ).shift ( UP * ( -ry + bottomGap + regionHeight / 2 ) )\
+            .set_z_index ( -1 )
+        self.play ( 
+            FadeIn ( mob_hlines, mob_vlines, mob_mixedGraphBg, run_time = 0.5 ),
+            Create ( mob_mixedGraph ), 
+            run_time = 0.5 
+        )
+        
+        for i, ( mob_graph, mob_freqText ) in \
+                enumerate ( zip ( mob_graphs, mob_freqTexts ) ):
+            self.play (  
+                Create ( mob_graph ),
+                FadeIn ( mob_freqText ),
+                mob_mixedGraph.animate.become ( getMixedGraph ( i + 1 ) ),
+                run_time = 1, 
+            )
+            mob_graph.restore ( )
+            mob_graph.save_state ( )
+            self.wait ( 0.5 )
+        
+        periodWidth = lcmDenoms * unitWavelength
+        mob_periodRect = Rectangle (
+            color = WHITE, height = totalHeight,
+            width = periodWidth,
+            fill_opacity = 0.15,
+            stroke_width = 0,
+        )   .shift ( ( periodWidth / 2 - rx,  bottomGap / 2, 0 ) )\
+            .set_z_index ( -1 )\
+            .reverse_points ( )
+        mob_periodRect.save_state ( )
+        mob_periodRect.stretch_to_fit_width ( 0 )\
+            .set_x ( -rx )
+        mob_periodVline = createVline ( 0 )\
+            .set_stroke ( width = 2, opacity = 1 )
+        self.add ( mob_periodVline, mob_periodRect )
+        self.play ( 
+            mob_periodRect.animate.restore ( ), 
+            mob_periodVline.animate.shift ( RIGHT * periodWidth ),
+            run_time = 1,
+        )
         self.wait ( 2 )
         
 class MajorScaleScene ( Scene ):
@@ -2098,5 +2861,4 @@ class CircleOfFifthScene ( Scene ):
 ################################################################################################
 ################################################################################################
 ################################################################################################
-################################################################################################
-# 以下代码防吞
+#######################################################

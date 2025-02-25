@@ -6,6 +6,8 @@ __all__ = [
     "nextPowerOf2", 
     "prevPowerOf2",
     "loop",
+    "nextMultipleOf",
+    "prevMultipleOf",
 ]
 
 # @np.vectorize 
@@ -28,3 +30,17 @@ def prevPowerOf2 ( n: int ) -> int:
 T = TypeVar ( "T" )
 def loop ( lst: Sequence [ T ], idx: int ) -> T:
     return lst [ idx % len ( lst ) ]
+
+def nextMultipleOf ( n: float, k: float, strict: bool = True ) -> float:
+    """
+    Returns the smallest integer multiple of `k` greater than `n`.
+    """
+    if strict and n % k == 0: return n + k
+    return ( n + k - 1 ) // k * k
+
+def prevMultipleOf ( n: float, k: float, strict: bool = True ) -> float:
+    """
+    Returnes the largest integer multiple of `k` less than `n`.
+    """
+    if strict and n % k == 0: return n - k
+    return n // k * k

@@ -8,27 +8,26 @@ import itertools as it
 
 from manim import *
 from manim.typing import Point3D
-import pyrsistent as p
+import pyrsistent as pyr
 
 from ...utils.algorithm_utils import segStack
-from ...utils.mobject_utils import stableNextTo
 from ..PositionedMobject import PositionedMobject
 
 DIR = Path ( __file__ ).parent if "__file__" in locals ( ) else Path.cwd ( )
 
 S = TypeVar ( "S", bound = "StaffElement" )
 
-_sharpPositions = p.m (
+_sharpPositions = pyr.m (
     G = ( 4, 1, 5, 2, -1, 3, 0 ),
     F = ( 2, -1, 3, 0, -3, 1, -2 ),
 )
 
-_flatPositions = p.m (
+_flatPositions = pyr.m (
     G = ( 0, 3, -1, 2, -2, 1, -3 ),
     F = ( -2, 1, -3, 0, 3, -1, 2 ),
 )
 
-_clefCodepoints = p.pmap ( {
+_clefCodepoints = pyr.pmap ( {
     "G": "\ue050",
     "F": "\ue062",
     "C": "\ue05c",
@@ -37,14 +36,14 @@ _clefCodepoints = p.pmap ( {
     "C_change": "\ue07b",
 } )
 
-_noteheadCodepoints = p.pmap ( {
+_noteheadCodepoints = pyr.pmap ( {
     "doubleWhole": "\ue0a0",
     "whole": "\ue0a2",
     "half": "\ue0a3",
     "black": "\ue0a4",
 } )
 
-_clefDefaultVPos = p.pmap ( { 
+_clefDefaultVPos = pyr.pmap ( { 
     "G": -2,
     "F": 2,
     "C": 0,
@@ -58,7 +57,7 @@ FLAT = -1
 DOUBLE_FLAT = -2
 TRIPLE_FLAT = -3
 
-_accidentalCodepoints = p.pmap ( {
+_accidentalCodepoints = pyr.pmap ( {
     TRIPLE_SHARP: "\ue265",
     DOUBLE_SHARP: "\ue263",
     SHARP: "\ue262",
@@ -140,7 +139,7 @@ class StaffElement ( VGroup, metaclass = ABCMeta ):
         """
         if not isinstance ( other, Mobject ):
             other = self.parent.getPosition ( ) + other * self.sp * RIGHT
-        stableNextTo ( self, other, LEFT, buff = buff * self.sp )
+        self.next_to ( other, LEFT, buff = buff * self.sp, coor_mask = RIGHT )
         return self
     
     def after ( self, other: "StaffElement | float", buff: float = 0 ) -> Self:
@@ -149,7 +148,7 @@ class StaffElement ( VGroup, metaclass = ABCMeta ):
         """
         if not isinstance ( other, Mobject ):
             other = self.parent.getPosition ( ) + other * self.sp * RIGHT
-        stableNextTo ( self, other, RIGHT, buff = buff * self.sp )
+        self.next_to ( other, RIGHT, buff = buff * self.sp, coor_mask = RIGHT )
         return self
     
     def getHspan ( self ) -> float:
@@ -522,7 +521,7 @@ class Chord ( PositionedStaffElement ):
             mob_accidentalColumn = StaffElement ( self.parent )
             mob_accidentalColumn.add ( *( lmob_accidentals [ i ] for i in column ) )\
                 .shift ( self.getPosition ( ) )
-            stableNextTo ( mob_accidentalColumn, self._mob_accidentals, LEFT, buff * sp )
+            mob_accidentalColumn.next_to ( self._mob_accidentals, LEFT, buff * sp, coor_mask = RIGHT )
             self._mob_accidentals.add ( mob_accidentalColumn )
         self._mob_accidentals.remove ( self._mob_noteheads )
         self._mob_accidentals.shift ( LEFT * ( self.parent.acciNoteheadBuff - buff ) * sp )
@@ -557,7 +556,7 @@ class Scale ( StaffElementGroup [ Chord ] ):
     def __init__ ( 
         self, parent, 
         vpos: Iterable [ int ],
-        buff: float = 2,
+        buff: float | Iterable [ float ] = 2,
         noteheadType: str | Iterable [ str ] = "black",
         accidentals: None | Iterable [ int | None ] = None,
         ledgerLineLength: float | tuple [ float, float ] | None = 1/3,
@@ -568,11 +567,13 @@ class Scale ( StaffElementGroup [ Chord ] ):
         
         if isinstance ( noteheadType, str ):
             noteheadType = it.repeat ( noteheadType )
+        if not isinstance ( buff, Iterable ):
+            buff = it.repeat ( buff )
             
         if accidentals is None:
             accidentals = it.repeat ( None )
         lastTarget = None
-        for vp, nh, acci in zip ( vpos, noteheadType, accidentals ):
+        for vp, nh, acci, b in zip ( vpos, noteheadType, accidentals, it.chain ( ( 0, ), buff ) ):
             mob_note = self.parent.createNote (
                 vpos = vp, 
                 noteheadType = nh, 
@@ -582,7 +583,7 @@ class Scale ( StaffElementGroup [ Chord ] ):
             )
             if lastTarget is not None:
                 mob_note.setHpos ( 
-                    lastTarget.getHpos ( ) + buff +
+                    lastTarget.getHpos ( ) + b +
                     mob_note.mob_noteheads.getHspan ( ) + 
                     accidentalSpaceRatio * mob_note.mob_accidentals.getHspan ( )
                 )

@@ -145,6 +145,7 @@ class PianoKeyboard ( VGroup ):
         mob_key = self.mobs.keys [ key ]
         mob_key.set_fill ( color = color )
         self._markedKeys.add ( key )
+        return self
     
     def markKeys ( 
             self, keys: Iterable [ int ], /, 
@@ -152,19 +153,23 @@ class PianoKeyboard ( VGroup ):
     ):
         for key in keys:
             self.markKey ( key, markColor = markColor )
+        return self
     
     def unmarkKey ( self, key: int ):
         isBlack = _keys [ key ] [ 0 ]
         self._markedKeys.discard ( key )
         mob_key = self.mobs.keys [ key ]
         mob_key.set_fill ( color = BLACK if isBlack else WHITE )
+        return self
     
     def unmarkKeys ( self, keys: Iterable [ int ] ):
         for key in keys:
             self.unmarkKey ( key )
+        return self
     
     def resetMarks ( self ):
         self.unmarkKeys ( frozenset ( self._markedKeys ) )
+        return self
 
 class MultiOctavePianoKeyboard ( VGroup ):
     def __init__ ( 
@@ -187,6 +192,7 @@ class MultiOctavePianoKeyboard ( VGroup ):
     ):
         octave, idx = divmod ( key, 12 )
         self [ octave ].markKey ( idx, markColor = markColor )
+        return self
     
     def getKey ( self, key: int ) -> Mobject:
         octave, idx = divmod ( key, 12 )
@@ -198,18 +204,22 @@ class MultiOctavePianoKeyboard ( VGroup ):
     ):
         for key in keys:
             self.markKey ( key, markColor = markColor )
+        return self
     
     def unmarkKey ( self, key: int ):
         octave, idx = divmod ( key, 12 )
         self [ octave ].unmarkKey ( idx )
+        return self
     
     def unmarkKeys ( self, keys: Iterable [ int ] ):
         for key in keys:
             self.unmarkKey ( key )
+        return self
     
     def resetMarks ( self ):
         for mob_keyboard in self:
             mob_keyboard.resetMarks ( )
+        return self
     
     def alignToKey ( self, key: int, mob: M, buff: float = 0.2 ) -> M:
         mob_key = self.getKey ( key )
