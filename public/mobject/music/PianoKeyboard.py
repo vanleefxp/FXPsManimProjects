@@ -6,7 +6,7 @@ from svgelements import Path as SVGPath
 
 __all__ = [ 
     "PianoKeyboard", "MultiOctavePianoKeyboard",
-    "MARK_RED", "MARK_GREEN", "MARK_BLUE",
+    "MARK_RED", "MARK_GREEN", "MARK_BLUE", "MARK_GRAY",
 ]
 
 M = TypeVar ( "M", bound = Mobject )
@@ -30,34 +30,7 @@ _keys = (
 MARK_RED = ( RED_B, RED_D )
 MARK_GREEN = ( GREEN_B, GREEN_D )
 MARK_BLUE = ( BLUE_B, BLUE_D )
-
-class _PianoKeyboardKeyAccessor ( Sequence [ Mobject ] ):
-    def __init__ ( self, parent: "PianoKeyboard" ):
-        self._parent = parent
-    
-    def __len__ ( self ) -> int: return 12
-    
-    def __getitem__ ( self, idx: int ) -> Mobject:
-        isBlack, groupIndex = _keys [ idx ]
-        if isBlack: return self._parent._blackKeys [ groupIndex ]
-        else: return self._parent._whiteKeys [ groupIndex ]
-
-class _PianoKeyboardSubmobAccessor ( ):
-    def __init__ ( self, parent: "PianoKeyboard" ):
-        self._parent = parent
-        self._keys = _PianoKeyboardKeyAccessor ( parent )
-    
-    @property
-    def blackKeys ( self ) -> VGroup:
-        return self._parent._blackKeys
-    
-    @property
-    def whiteKeys ( self ) -> VGroup:
-        return self._parent._whiteKeys
-    
-    @property
-    def keys ( self ) -> _PianoKeyboardKeyAccessor:
-        return self._keys
+MARK_GRAY = ( GRAY_B, GRAY_D )
     
 class PianoKeyboard ( VGroup ):
     def __init__ ( 
@@ -72,13 +45,12 @@ class PianoKeyboard ( VGroup ):
             **kwargs, 
         ):
         
-        super ( ).__init__ ( )
+        super ( ).__init__ ( **kwargs )
         
         ww, hw = whiteWidth, whiteHeight
         wb, hb = blackWidth, blackHeight
         c = cornerWidth
         
-        self._mobs = _PianoKeyboardSubmobAccessor ( self )
         self._markColor = markColor
         self._markedKeys = set ( )
         
@@ -113,27 +85,28 @@ class PianoKeyboard ( VGroup ):
             fill_opacity = 1,
         )
         
-        self._whiteKeys = VGroup ( )
-        self._blackKeys = VGroup ( )
+        self._mob_whiteKeys = VGroup ( )
+        self._mob_blackKeys = VGroup ( )
         
         for i in range ( 7 ):
             mob_whiteKey = mob_whiteKeyTemplate.copy ( )\
                 .shift ( ( i * ww, 0, 0 ) )
             mob_whiteKey.isBlack = False
-            self._whiteKeys.add ( mob_whiteKey )
+            self._mob_whiteKeys.add ( mob_whiteKey )
         
         for i, dx in zip ( ( 0, 1, 3, 4, 5 ), blackDisplace ):
             blackX = ( i + 1 ) * ww  + wb * ( dx - 0.5 )
             mob_blackKey = mob_blackKeyTemplate.copy ( )\
                 .shift ( ( blackX, 0, 0 ) )
             mob_blackKey.isBlack = True
-            self._blackKeys.add ( mob_blackKey )
+            self._mob_blackKeys.add ( mob_blackKey )
         
-        self.add ( self._whiteKeys, self._blackKeys )
+        self.add ( self._mob_whiteKeys, self._mob_blackKeys )
     
-    @property
-    def mobs ( self ) -> _PianoKeyboardSubmobAccessor:
-        return self._mobs
+    def getKey ( self, idx: int ) -> SVGPath:
+        isBlack, groupIndex = _keys [ idx ]
+        if isBlack: return self._mob_blackKeys [ groupIndex ]
+        else: return self._mob_whiteKeys [ groupIndex ]
     
     def markKey ( 
             self, key: int, /, 
@@ -142,7 +115,7 @@ class PianoKeyboard ( VGroup ):
         if markColor is None: markColor = self._markColor
         isBlack = _keys [ key ] [ 0 ]
         color = markColor [ isBlack ]
-        mob_key = self.mobs.keys [ key ]
+        mob_key = self.getKey ( key )
         mob_key.set_fill ( color = color )
         self._markedKeys.add ( key )
         return self
@@ -158,7 +131,7 @@ class PianoKeyboard ( VGroup ):
     def unmarkKey ( self, key: int ):
         isBlack = _keys [ key ] [ 0 ]
         self._markedKeys.discard ( key )
-        mob_key = self.mobs.keys [ key ]
+        mob_key = self.getKey ( key )
         mob_key.set_fill ( color = BLACK if isBlack else WHITE )
         return self
     
@@ -170,6 +143,13 @@ class PianoKeyboard ( VGroup ):
     def resetMarks ( self ):
         self.unmarkKeys ( frozenset ( self._markedKeys ) )
         return self
+    
+    def alignToKey ( self, key: int, mob: M, buff: float = 0.2 ) -> M:
+        mob_key = self.getKey ( key )
+        mob.move_to ( mob_key )\
+            .align_to ( mob_key, DOWN )\
+            .shift ( UP * buff )
+        return mob
 
 class MultiOctavePianoKeyboard ( VGroup ):
     def __init__ ( 
@@ -196,7 +176,7 @@ class MultiOctavePianoKeyboard ( VGroup ):
     
     def getKey ( self, key: int ) -> Mobject:
         octave, idx = divmod ( key, 12 )
-        return self [ octave ].mobs.keys [ idx ]
+        return self [ octave ].getKey ( idx )
     
     def markKeys ( 
             self, keys: Iterable [ int ], /, 

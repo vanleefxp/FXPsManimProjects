@@ -1,12 +1,15 @@
 from collections.abc import Callable
 from fractions import Fraction as Q
+import sys, json
 
 from manim import *
 import numpy as np
-from scipy.optimize import minimize_scalar, root_scalar
 from pathlib import Path
 
 DIR = Path ( __file__ ).parent if "__file__" in locals ( ) else Path.cwd ( )
+sys.path.append ( str ( ( DIR/".." ).resolve ( ) ) )
+
+from public.sound.waveform import *
 
 latexTemplate = TexTemplate (
     tex_compiler = "xelatex",
@@ -860,7 +863,6 @@ class SummedWaveScene ( Scene ):
     def construct ( self ):
         self.camera.background_color = "#282c34"
         
-        from waveform import analyzeSoundFile
         _, exampleWaveform = analyzeSoundFile ( 
             DIR/r"assets/sound/piano.wav",
             **analyzeConfig,
@@ -980,7 +982,6 @@ class WaveformScene ( ThreeDScene ):
         periodRectHeight = ( ry + waveformY - 0.8 ) * 2
         runTime = 2 * rx / wl * period
         
-        from waveform import analyzeSoundFile
         _, exampleWaveform = analyzeSoundFile ( 
             DIR/"assets/sound/violin.wav",
             **analyzeConfig,
@@ -1483,7 +1484,6 @@ class FrequencyAndTimeDomainScene ( Scene ):
             .next_to ( mob_rect_waveformArea, RIGHT, buff = space )\
             .set_coord ( graphY, 1 )
             
-        from waveform import analyzeSoundFile
         _, waveform = analyzeSoundFile ( 
             DIR/"assets/sound/violin.wav",
             **analyzeConfig,
@@ -1728,13 +1728,6 @@ class WaveDemoScene ( Scene ):
         # 与波形有关的内容
         # 载入波形
         
-        from waveform import ( 
-            analyzeSoundFile, 
-            SineWave, 
-            SquareWave, 
-            TriangleWave, 
-            SawtoothWave,
-        )
         waveforms = (
             *(
                 analyzeSoundFile ( 
@@ -2508,7 +2501,6 @@ class StringInstrumentHarmonicScene ( Scene ):
         ringX = ( float ( ringPosition ) - 0.5 ) * stringLength
         k1 = ringPosition.denominator
         
-        from waveform import analyzeSoundFile
         _, exampleWaveform = analyzeSoundFile (
             DIR/"assets/sound/violin.wav",
             **analyzeConfig,
@@ -2910,7 +2902,6 @@ class StringInstrumentHarmonicScene ( Scene ):
         
 class SubtitleScene ( Scene ):
     def construct ( self ):
-        import json
         data = json.loads ( 
             ( DIR/"assets/sub.json" )\
                 .read_text ( encoding = "utf-8" ) 

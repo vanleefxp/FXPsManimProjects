@@ -1,12 +1,19 @@
-from fractions import Fraction as Q
+from numbers import Rational
 
 __all__ = [
     "frac2Latex",
 ]
 
-def frac2Latex ( frac: Q, slant: bool = False ) -> str:
+def frac2Latex ( 
+    frac: Rational, 
+    slant: bool = False, 
+    show1: bool = False,
+    small: bool = False,
+) -> str:
     n, d = frac.numerator, frac.denominator
-    if d == 1: return str ( n )
+    if d == 1 and not show1: return str ( n )
     elif slant: return f"{n}/{d}"
-    elif n > 0: return f"\\frac{{{ n }}}{{{ d }}}"
-    else: return f"-\\frac{{{ -n }}}{{{ d }}}"
+    else:
+        prefix = "tfrac" if small else "frac"
+        if n > 0: return f"\\{ prefix }{{{ n }}}{{{ d }}}"
+        else: return f"-\\{prefix}{{{ -n }}}{{{ d }}}"

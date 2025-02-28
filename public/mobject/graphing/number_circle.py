@@ -2,6 +2,9 @@ from collections.abc import Callable
 import itertools as it
 
 from manim import *
+from manim.typing import Point3D
+
+from ..PositionedMobject import PositionedMobject
 from ...utils.geometry_utils import udvec # type:ignore
 from ...text_config import latexConfig
 
@@ -12,7 +15,7 @@ CW = -1
 OUTSIDE = 1
 INSIDE = -1
 
-class NumberCircle ( Arc ):
+class NumberCircle ( Arc, PositionedMobject ):
     def __init__ (
         self,
         radius = 2.5,
@@ -31,6 +34,7 @@ class NumberCircle ( Arc ):
             angle = angle,
             stroke_width = strokeWidth,
         )
+        if direction < 0: self.reverse_points ( )
         self._mob_centerDot = Dot ( radius = 0.01 )\
             .set_fill ( opacity = 0 )\
             .set_stroke ( width = 0 )\
@@ -89,13 +93,27 @@ class NumberCircle ( Arc ):
             side: int = OUTSIDE,
             buff: float = 0.1, 
             add: bool = True,
+            labelSizeMask: Point3D = UR,
+            autoRotate: bool = False,
+            correctDownLabels: bool = True,
     ):
-        side = OUTSIDE if side >= 0 else INSIDE
-        w, h = label.get_width ( ), label.get_height ( )
-        d = np.hypot ( w, h )
-        label.move_to ( self.n2p ( number ) )\
-            .shift ( side * ( d / 2 + buff ) * self.n2v ( number ) )
-        if add: self.add ( label )
+        if autoRotate:
+            angle = self.n2a ( number )
+            label.move_to ( self.getPosition ( ) )\
+                .shift ( UP * ( self.radius + buff + label.get_height ( ) ) )\
+                .rotate ( 
+                    self.n2a ( number ) - PI / 2, 
+                    about_point = self.getPosition ( ) 
+                )
+            if correctDownLabels and angle % TAU > PI: label.rotate ( PI )
+        else:
+            labelSizeMask = np.sign ( labelSizeMask )
+            side = OUTSIDE if side >= 0 else INSIDE
+            labelSize = label.get_corner ( UR ) - label.get_corner ( DL )
+            d = np.linalg.norm ( labelSize * labelSizeMask )
+            label.move_to ( self.n2p ( number ) )\
+                .shift ( side * ( d / 2 + buff ) * self.n2v ( number ) )
+            if add: self.add ( label )
         return label
 
     def addLabels (
@@ -119,6 +137,29 @@ class NumberCircle ( Arc ):
         startPoint = self.n2p ( start )
         endPoint = self.n2p ( end )
         return Line ( startPoint, endPoint, **kwargs )
+    
+    def createRay ( self, number: float, add = True, **kwargs ) -> Line:
+        mob_line = Line (
+            self.getPosition ( ),
+            self.n2p ( number ),
+            **kwargs
+        )
+        if add: self.add ( mob_line )
+        return mob_line
+    
+    def createRays (
+        self, step: float = 1,
+        add: bool = True,
+        **kwargs
+    ):
+        rays = VGroup ( )
+        for i in it.count ( ):
+            value = i * step
+            if value >= self._maxVal: break
+            ray = self.createRay ( value, add = False, **kwargs )
+            rays.add ( ray )
+        if add: self.add ( rays )
+        return rays
     
     def createArc ( 
             self, start: float, diff: float, 

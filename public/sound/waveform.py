@@ -10,8 +10,8 @@ from scipy.io import wavfile
 from scipy.integrate import quad
 from sklearn.cluster import DBSCAN
 
-from approxGCD import approxGCD
-from envelope import Envelope, NoEnvelope
+from ..utils.number_theory_utils import approxGCD
+from .envelope import Envelope, NoEnvelope
 
 __all__ = [
     "Waveform", 
@@ -516,18 +516,18 @@ def analyzeSoundFile (
 def saveSoundFile ( 
     waveform: Waveform,  
     path: os.PathLike,
-    baseFreq: float = 440, 
-    time: float = 2, 
-    volume: float = 0.5, /,
+    freq: float = 440, 
+    duration: float = 2, 
+    volume: float = 0.5,
     envelope: Envelope = NoEnvelope ( ), 
     sampleRate: int = 44100, 
     phaseShift: float = 0,
     prependTime: float = 0.2,
 ) -> None:
-    t = np.linspace ( 0, time, int ( sampleRate * time ), endpoint = False )
+    t = np.linspace ( 0, duration, int ( sampleRate * duration ), endpoint = False )
     audioData = np.int16 ( 
-        envelope.calc ( t, time ) * 
-        waveform ( t * baseFreq - phaseShift ) * 
+        envelope.calc ( t, duration ) * 
+        waveform ( t * freq - phaseShift ) * 
         volume * 32767
     )
     wavfile.write ( 

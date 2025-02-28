@@ -413,12 +413,12 @@ class Chord ( PositionedStaffElement ):
         
         sp = self.sp
         musicFont = self.musicFont
-        musicFontSize = self.parent._musicFontSize
         
         vpos = np.array ( vpos )
         if isinstance ( noteheadType, str ):
             noteheadType = np.full ( len ( vpos ), noteheadType )
-        else: noteheadType = np.array ( noteheadType )
+        else: 
+            noteheadType = np.array ( tuple ( it.islice ( noteheadType, len ( vpos ) ) ) )
         vposArgs = np.argsort ( vpos )
         
         vpos = vpos [ vposArgs ]
@@ -428,7 +428,10 @@ class Chord ( PositionedStaffElement ):
         if accidentals is None:
             accidentals = it.repeat ( None )
         else:
-            accidentals = np.array ( accidentals ) [ vposArgs ]
+            accidentals = np.array ( 
+                tuple ( accidentals ), 
+                dtype = object 
+            ) [ vposArgs ]
         
         @lru_cache ( maxsize = 4 )
         def getNoteheadTemplate ( noteheadType: str = "black" ) -> Text:

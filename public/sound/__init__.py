@@ -1,3 +1,4 @@
+from typing import Type
 from collections.abc import Iterable, Callable
 from pathlib import Path
 import subprocess, shutil, time
@@ -10,11 +11,19 @@ from music21.chord import Chord
 from music21.tempo import MetronomeMark
 import toml
 
-__all__ = [ "generateNoteMidi", "generateChordMidi", "addMidi" ]
+from .waveform import Waveform, SineWave, saveSoundFile
+from ..utils.music_utils import pitch2Freq
+
+__all__ = [ 
+    "generateNoteMidi", 
+    "generateChordMidi", 
+    "addMidi",
+    "addWaveform",
+]
 
 DIR = Path ( __file__ ).parent if "__file__" in locals ( ) else Path.cwd ( )
 _bpm60 = MetronomeMark ( number = 60 )
-_soundfontConfig = toml.load ( DIR/"assets/soundfont.toml" )
+_soundfontConfig = toml.load ( DIR/"../assets/soundfont.toml" )
 _soundfontPath = Path ( _soundfontConfig [ "soundfontPath" ] )
 
 def generateNoteMidi ( 
@@ -84,3 +93,21 @@ def addMidi (
     scene.add_sound ( wavPath, time_offset = timeOffset )
     dispose ( )
 
+def addWaveform ( 
+    scene: Scene,
+    waveform: Waveform | Type [ Waveform ] = SineWave, 
+    pitch: float | None = None,
+    timeOffset: float = 0, 
+    **kwargs 
+):
+    if pitch is not None:
+        kwargs [ "freq" ] = pitch2Freq ( pitch )
+    if isinstance ( waveform, type ) and issubclass ( waveform, Waveform ):
+        waveform = waveform ( )
+    tempFolder = DIR/"_tmp"
+    tempFolder.mkdir ( exist_ok = True )
+    filename = f"temp_{time.monotonic_ns ( )}"
+    wavPath = ( tempFolder/f"{filename}.wav" ).resolve ( )
+    saveSoundFile ( waveform, tempFolder/f"{filename}.wav", **kwargs )
+    scene.add_sound ( wavPath, time_offset = timeOffset )
+    if tempFolder.exists ( ): shutil.rmtree ( tempFolder )
