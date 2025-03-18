@@ -1,5 +1,7 @@
 # 个人 Manim 项目合集
 
+> 注：由于后续打算从 Manim 迁移至 [JAnim](https://github.com/jkjkil4/JAnim), 本仓库的源代码将不再继续更新。我个人的 JAnim 项目仓库为 [`fxp_janim-projects`](https://github.com/vanleefxp/fxp_janim-projects)。
+
 此仓库是我个人的 Manim 动画项目合集。我使用的 Manim 版本是社区版 [Manim CE](https://www.manim.community/). 仓库根目录下基本上除 `public` 之外的文件夹，每个文件夹就是一个独立项目。`public` 文件夹中包含了一些我在自己项目中用到的自定义 `Mobject` 和辅助函数等。关于每个项目的具体介绍参见项目文件夹内的 `README` 文件 (虽然目前还没有)。
 
 项目中用到的字体、音源等外部资源未包含于项目目录中，若想尝试自己渲染视频片段需注意。缺失外部资源可能会导致报错或文字显示异常。以下列出的是我在项目当中使用的部分外部资源：
